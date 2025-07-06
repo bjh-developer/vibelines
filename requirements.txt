@@ -1,0 +1,8 @@
+flask
+lyricsgenius
+langdetect
+nltk
+transformers
+torch
+pandas
+supabase
