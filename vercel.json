@@ -7,9 +7,6 @@
       "maxDuration": 30
     }
   },
-  "env": {
-    "GENIUS_API_TOKEN": "@genius_api_token"
-  },
   "build": {
     "env": {
       "VITE_API_BASE_URL": ""
