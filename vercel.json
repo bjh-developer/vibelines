@@ -1,11 +1,7 @@
 {
   "functions": {
-    "api/genius-search.js": {
-      "maxDuration": 30
-    },
-    "api/lyrics-scrape.js": {
-      "maxDuration": 30
-    }
+    "api/genius-search.js": { "maxDuration": 30 },
+    "api/lyrics-scrape.js": { "maxDuration": 30 }
   },
   "build": {
     "env": {
@@ -13,10 +9,7 @@
     }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)",     "destination": "/" }
   ]
 }
-
