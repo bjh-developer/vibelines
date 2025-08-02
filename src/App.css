@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Mobile-friendly styles */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent zoom on touch devices */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Improve touch target sizes */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent horizontal scroll */
+* {
+  box-sizing: border-box;
+}
+
+/* Mobile responsive text */
+@media (max-width: 768px) {
+  .text-pressure-title {
+    font-size: clamp(1.5rem, 8vw, 4rem) !important;
+  }
+}
