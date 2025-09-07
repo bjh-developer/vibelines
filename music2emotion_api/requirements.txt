@@ -24,5 +24,5 @@ torch_optimizer==0.3.0
 torchaudio==2.2.2
 torchmetrics==1.4.1
 tqdm==4.66.5
-transformers==4.44.0
+transformers==4.53.0
 utils==1.0.2
