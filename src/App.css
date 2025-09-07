@@ -5,6 +5,50 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@view-transition {
+  navigation: auto;
+}
+
+@keyframes leave {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+@keyframes enter {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+::view-transition-group(*) {
+  animation-duration: .33s;
+}
+
+::view-transition-old(root) {
+  animation: .33s ease-in both leave;
+}
+
+::view-transition-new(root) {
+  animation: .33s ease-in both enter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*) {
+    animation-duration: 0s;
+  }
+}
+
 /* Mobile-friendly styles */
 body {
   margin: 0;

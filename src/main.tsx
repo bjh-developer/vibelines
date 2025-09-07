@@ -1,16 +1,44 @@
 import { createRoot } from "react-dom/client"
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from "./App.tsx"
 import Loading from "./Loading.tsx"
 import MoodTimeline from "./MoodTimeline.tsx"
+import About from "./About.tsx"
+import Contact from "./Contact.tsx"
+import PrivacyPolicy from "./PrivacyPolicy.tsx"
+
+// Create router with view transitions support
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />
+  },
+  {
+    path: '/callback',
+    element: <Loading />
+  },
+  {
+    path: '/loading',
+    element: <Loading />
+  },
+  {
+    path: '/moodtimeline',
+    element: <MoodTimeline />
+  },
+  {
+    path: '/about',
+    element: <About />
+  },
+  {
+    path: '/contact',
+    element: <Contact />
+  },
+  {
+    path: '/privacy-policy',
+    element: <PrivacyPolicy />
+  }
+])
 
 createRoot(document.getElementById("root")!).render(
-  <Router>
-    <Routes>
-      <Route path='/' element={<App />} />
-      <Route path='/callback' element={<Loading />} />
-      <Route path="/loading" element={<Loading />} />
-      <Route path="/moodtimeline" element={<MoodTimeline />} />
-    </Routes>
-  </Router>
+  <RouterProvider router={router} />
 )

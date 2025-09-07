@@ -40,7 +40,7 @@ export default function ChapterCard({
     console.log('🎨 ChapterCard useEffect - soundtrack:', soundtrack, 'albumCover:', albumCover);
     
     // If no album cover provided, search for it
-    if (!albumCover) {
+    if (!albumCover && soundtrack) {
       // Extract artist and track from soundtrack string
       // Format: "Song Name" by Artist Name
       const match = soundtrack.match(/"([^"]+)"\s+by\s+(.+)/);
