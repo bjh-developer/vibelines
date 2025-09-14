@@ -23,7 +23,7 @@ Pillow==11.1.0
 pretty_midi==0.2.10
 pytorch_lightning==2.4.0
 PyYAML==6.0.1
-Requests==2.32.3
+Requests==2.32.4
 scikit_learn==1.6.1
 spotipy==2.24.0
 torch==2.2.2
