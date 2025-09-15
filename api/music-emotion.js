@@ -59,9 +59,23 @@ export default async function handler(req, res) {
           });
           return;
         }
+        
+        // Replace forward slashes with a safe placeholder before encoding
+        // This prevents routing issues in FastAPI
+        const safeSongTitle = song_title.replace(/\//g, '___SLASH___');
+        const safeArtistName = artist_name.replace(/\//g, '___SLASH___');
+        
         // Your backend expects the exact format: /analyse&predict/{title}/{artist}
-        targetUrl = `${VM_API_URL}/analyse&predict/${encodeURIComponent(song_title)}/${encodeURIComponent(artist_name)}`;
+        const encodedTitle = encodeURIComponent(safeSongTitle);
+        const encodedArtist = encodeURIComponent(safeArtistName);
+        targetUrl = `${VM_API_URL}/analyse&predict/${encodedTitle}/${encodedArtist}`;
         requestOptions.method = 'POST';
+        
+        console.log('🎵 Original song_title:', song_title);
+        console.log('🎤 Original artist_name:', artist_name);
+        console.log('🔒 Safe song_title:', safeSongTitle);
+        console.log('� Safe artist_name:', safeArtistName);
+        console.log('🔗 Final URL:', targetUrl);
         break;
         
       default:

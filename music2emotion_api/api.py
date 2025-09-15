@@ -215,6 +215,11 @@ async def analyse_and_predict(song_title: str, artist_name: str) -> dict:
     if music2emo_model is None:
         raise HTTPException(status_code=503, detail="Model is not loaded yet. Please try again later.")
 
+    # Replace the safe placeholder back to forward slashes
+    song_title = song_title.replace('___SLASH___', '/')
+    artist_name = artist_name.replace('___SLASH___', '/')
+    logger.info(f"🎵 Processing: '{song_title}' by '{artist_name}'")
+
     mp3_file = None  # Initialize mp3_file to avoid UnboundLocalError
     
     try:
