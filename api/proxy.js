@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     
     // Add environment API key for server-side requests
     if (endpoint !== '/' && endpoint !== 'device-info') {
-      const apiKey = process.env.M2E_API_KEY;
+      const apiKey = process.env.VITE_M2E_API_KEY;
       if (apiKey && !headers['api-key']) {
         headers['api-key'] = apiKey;
       }

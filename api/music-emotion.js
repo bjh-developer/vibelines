@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     // Add API key for protected endpoints
     if (endpoint !== 'health' && endpoint !== 'device-info') {
       // You should set this in Vercel environment variables
-      const apiKey = process.env.M2E_API_KEY;
+      const apiKey = process.env.VITE_M2E_API_KEY;
       if (apiKey) {
         requestOptions.headers['api-key'] = apiKey;
       }
