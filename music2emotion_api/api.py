@@ -140,11 +140,18 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Vibeline's Music2Emotion API", version="1.0.0", lifespan=lifespan)
 
+# Only allow your Vercel frontend
+origins = [
+    "https://vibelines.vercel.app",
+    "https://vibelines.vercel.app/callback",  # Include callback URL if needed
+    "https://vibelines.vercel.app/loading",
+    "http://127.0.0.1:3000"  # For local testing purposes
+]
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # TODO: Update with specific origins
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
