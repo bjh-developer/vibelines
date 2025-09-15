@@ -30,6 +30,7 @@ export default function Loading() {
   const [moodsAndDatesData, setMoodsAndDatesData] = useState<
     MoodsAndDatesData[]
   >([]);
+  console.log('🎵 Moods and Dates Data:', moodsAndDatesData);
   const [isAnalysisActive, setIsAnalysisActive] = useState(true);
 
   const openrouterkey = import.meta.env.VITE_OPENROUTER_API_KEY;
@@ -42,6 +43,7 @@ export default function Loading() {
         .from("song_mood_analysis")
         .select("song_title, artist_name")
         .limit(1);
+      console.log("🔌 Supabase test data:", data);
 
       if (error) {
         console.error("❌ Supabase connection test failed:", error);
