@@ -235,6 +235,12 @@ export default function MoodTimeline() {
               />
             </div>
 
+            <div>
+              <a href="https://www.buymeacoffee.com/bjh21" target="_blank">
+                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" className="height: 60px !important;width: 217px !important;" />
+              </a>
+            </div>
+
             <div className="text-center max-w-2xl mt-8 md:mt-12 pb-8">
               <p className="text-gray-500 text-xs md:text-sm leading-relaxed">
                 Swipe the cards to explore different chapters of your
