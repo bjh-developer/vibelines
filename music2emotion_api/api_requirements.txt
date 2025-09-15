@@ -3,7 +3,7 @@ fastapi[standard]
 uvicorn[standard]==0.24.0
 pydub==0.25.1
 deezer-python==6.1.1
-aiohttp==3.9.1
+aiohttp==3.12.14
 aiofiles==23.2.0
 chordparser==0.4.2
 fire==0.7.0
