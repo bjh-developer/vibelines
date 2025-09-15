@@ -7,6 +7,7 @@ import About from "./About.tsx"
 import Contact from "./Contact.tsx"
 import PrivacyPolicy from "./PrivacyPolicy.tsx"
 import FAQ from "./FAQ.tsx"
+import SpotifyCallback from "./components/SpotifyCallback.tsx"
 
 // Create router with view transitions support
 const router = createBrowserRouter([
@@ -16,7 +17,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/callback',
-    element: <Loading />
+    element: <SpotifyCallback />
   },
   {
     path: '/loading',

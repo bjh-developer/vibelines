@@ -31,7 +31,7 @@ const SpotifyCallback: React.FC = () => {
         const success = await handleSpotifyCallback(code, state);
         if (success) {
           setStatus('success');
-          setTimeout(() => navigate('/'), 2000);
+          setTimeout(() => navigate('/loading'), 2000);
         } else {
           setStatus('error');
           setTimeout(() => navigate('/'), 3000);
