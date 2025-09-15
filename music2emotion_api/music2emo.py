@@ -188,9 +188,16 @@ class Music2emo:
         self,
         model_weights = "saved_models/J_all.ckpt"
     ):
-        use_cuda = torch.cuda.is_available()
-        use_mps = torch.backends.mps.is_available()
-        self.device = torch.device("cuda" if use_cuda else "mps" if use_mps else "cpu")
+        # Prioritize CUDA first, then MPS, then CPU
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+            print(f"🚀 Using CUDA device: {torch.cuda.get_device_name()}")
+        elif torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+            print("🚀 Using MPS (Apple Silicon) device")
+        else:
+            self.device = torch.device("cpu")
+            print("⚠️ Using CPU device (CUDA/MPS not available)")
 
         self.feature_extractor = FeatureExtractorMERT(model_name='m-a-p/MERT-v1-95M', device=self.device, sr=resample_rate)
         self.model_weights = model_weights
@@ -201,11 +208,28 @@ class Music2emo:
             output_size_regression=2
         )
 
-        # Force float32 for MPS compatibility
-        if self.device.type == 'mps':
-            checkpoint = torch.load(self.model_weights, map_location='cpu', weights_only=False)
-        else:
-            checkpoint = torch.load(self.model_weights, map_location=self.device, weights_only=False)
+        torch.serialization.add_safe_globals([np.core.multiarray.scalar])
+        
+        # Load checkpoint with proper device handling and numpy compatibility
+        try:
+            if self.device.type == 'mps':
+                checkpoint = torch.load(self.model_weights, map_location='cpu', weights_only=False)
+            else:
+                checkpoint = torch.load(self.model_weights, map_location=self.device, weights_only=False)
+        except Exception as e:
+            print(f"⚠️ Failed to load with weights_only=False, trying with safe globals...")
+            # Add additional numpy types that might be needed
+            torch.serialization.add_safe_globals([
+                np.dtype, 
+                np.core.multiarray.scalar,
+                np.core.multiarray._dtype_ctypes,
+                type(np.dtype('float64')),
+                type(np.dtype('float32'))
+            ])
+            if self.device.type == 'mps':
+                checkpoint = torch.load(self.model_weights, map_location='cpu', weights_only=False)
+            else:
+                checkpoint = torch.load(self.model_weights, map_location=self.device, weights_only=False)
         
         state_dict = checkpoint["state_dict"]
         
@@ -216,15 +240,23 @@ class Music2emo:
         model_keys = set(self.music2emo_model.state_dict().keys())
         filtered_state_dict = {key: value for key, value in state_dict.items() if key in model_keys}
         
-        # Convert all tensors to float32 for MPS compatibility
+        # Convert tensors to appropriate dtype based on device
         if self.device.type == 'mps':
+            # Convert all tensors to float32 for MPS compatibility
             filtered_state_dict = {key: value.float() for key, value in filtered_state_dict.items()}
+        elif self.device.type == 'cuda':
+            # Ensure proper dtype for CUDA
+            filtered_state_dict = {key: value.float() if value.dtype == torch.float64 else value 
+                                 for key, value in filtered_state_dict.items()}
         
         # Load the filtered state_dict and set the model to evaluation mode
         self.music2emo_model.load_state_dict(filtered_state_dict)
         
+        # Move model to device and set to eval mode
         self.music2emo_model.to(self.device)
         self.music2emo_model.eval()
+        
+        print(f"✅ Music2emo model loaded successfully on {self.device}")
 
     def predict(self, audio, threshold = 0.5):
 
@@ -288,8 +320,7 @@ class Music2emo:
         else:
             final_embedding_mert = np.zeros((1536,))
 
-        final_embedding_mert = torch.from_numpy(final_embedding_mert)
-        final_embedding_mert.to(self.device)
+        final_embedding_mert = torch.from_numpy(final_embedding_mert).to(self.device)
 
         # --- Chord feature extract ---
         config = HParams.load("./inference/data/run_config.yaml")
@@ -300,10 +331,15 @@ class Music2emo:
         model = BTC_model(config=config.model).to(self.device)
 
         if os.path.isfile(model_file):
-            checkpoint = torch.load(model_file, map_location=torch.device('cpu'))
+            # Load checkpoint with proper device handling
+            if self.device.type == 'cuda':
+                checkpoint = torch.load(model_file, map_location=self.device, weights_only=False)
+            else:
+                checkpoint = torch.load(model_file, map_location='cpu', weights_only=False)
             mean = checkpoint['mean']
             std = checkpoint['std']
             model.load_state_dict(checkpoint['model'])
+            model.to(self.device)  # Ensure model is on correct device
 
         audio_path = audio
         audio_id = audio_path.split("/")[-1][:-4]

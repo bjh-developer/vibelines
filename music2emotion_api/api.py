@@ -13,6 +13,7 @@ from typing import Optional
 from deezer import Client
 from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
+import numpy as np
 
 
 # Configure logging
@@ -101,15 +102,17 @@ async def download_mp3_preview(preview_url: str) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global music2emo_model, phi_model, tokenizer
+    global music2emo_model
 
     # Start up music2emo_model
     try:
         logger.info("🚀 Starting up and loading the Music2emo model...")
-        torch.set_default_tensor_type('torch.FloatTensor')
+        torch.set_default_dtype(torch.float32)
         # torch.set_num_threads(2)
         torch.set_grad_enabled(False)
-        music2emo_model = Music2emo(model_weights="saved_models/J_all.ckpt") # Initialise music2emo model
+        
+        # Initialize Music2emo model (it handles safe globals internally)
+        music2emo_model = Music2emo(model_weights="saved_models/J_all.ckpt")
 
         # Warm up the model with a dummy prediction to compile torch operations
         try:
@@ -152,6 +155,29 @@ app.add_middleware(
 async def root():
     """Health check endpoint"""
     return {"message": "Vibeline's Music2Emotion API is running", "status": "healthy"}
+
+@app.get("/device-info")
+async def device_info():
+    """Get information about the current device being used"""
+    global music2emo_model
+    
+    device_info = {
+        "cuda_available": torch.cuda.is_available(),
+        "mps_available": torch.backends.mps.is_available(),
+        "device_count": torch.cuda.device_count() if torch.cuda.is_available() else 0,
+    }
+    
+    if torch.cuda.is_available():
+        device_info["cuda_device_name"] = torch.cuda.get_device_name()
+        device_info["cuda_memory_allocated"] = torch.cuda.memory_allocated()
+        device_info["cuda_memory_reserved"] = torch.cuda.memory_reserved()
+    
+    if music2emo_model is not None:
+        device_info["model_device"] = str(music2emo_model.device)
+    else:
+        device_info["model_device"] = "Model not loaded"
+    
+    return device_info
 
 @app.post("/analyse&predict/{song_title}/{artist_name}")
 async def analyse_and_predict(song_title: str, artist_name: str) -> dict:
