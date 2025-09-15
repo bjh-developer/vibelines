@@ -189,7 +189,8 @@ class Music2emo:
         model_weights = "saved_models/J_all.ckpt"
     ):
         use_cuda = torch.cuda.is_available()
-        self.device = torch.device("cuda" if use_cuda else "cpu")
+        use_mps = torch.backends.mps.is_available()
+        self.device = torch.device("cuda" if use_cuda else "mps" if use_mps else "cpu")
 
         self.feature_extractor = FeatureExtractorMERT(model_name='m-a-p/MERT-v1-95M', device=self.device, sr=resample_rate)
         self.model_weights = model_weights
@@ -200,7 +201,12 @@ class Music2emo:
             output_size_regression=2
         )
 
-        checkpoint = torch.load(self.model_weights, map_location=self.device, weights_only=False)
+        # Force float32 for MPS compatibility
+        if self.device.type == 'mps':
+            checkpoint = torch.load(self.model_weights, map_location='cpu', weights_only=False)
+        else:
+            checkpoint = torch.load(self.model_weights, map_location=self.device, weights_only=False)
+        
         state_dict = checkpoint["state_dict"]
         
         # Adjust the keys in the state_dict
@@ -209,6 +215,10 @@ class Music2emo:
         # Filter state_dict to match model's keys
         model_keys = set(self.music2emo_model.state_dict().keys())
         filtered_state_dict = {key: value for key, value in state_dict.items() if key in model_keys}
+        
+        # Convert all tensors to float32 for MPS compatibility
+        if self.device.type == 'mps':
+            filtered_state_dict = {key: value.float() for key, value in filtered_state_dict.items()}
         
         # Load the filtered state_dict and set the model to evaluation mode
         self.music2emo_model.load_state_dict(filtered_state_dict)

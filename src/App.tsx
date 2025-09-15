@@ -10,7 +10,6 @@ export default function App() {
   const navigate = useNavigate();
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [showPermissionButton, setShowPermissionButton] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   const requestGyroscopePermission = async () => {
     if (
@@ -33,17 +32,11 @@ export default function App() {
     }
   };
 
-  // Check if we need to show permission button (iOS 13+) and detect mobile
+  // Check if we need to show permission button (iOS 13+)
   useEffect(() => {
-    const mobileCheck =
-      /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const needsPermission =
       typeof (DeviceOrientationEvent as any).requestPermission === "function";
-
-    setIsMobile(mobileCheck);
 
     if (isIOS && needsPermission) {
       setShowPermissionButton(true);
@@ -108,6 +101,13 @@ export default function App() {
       hoverStyles: { bgColor: "#10b981", textColor: "#ffffff" },
     },
     {
+      label: "faq",
+      href: "/faq",
+      ariaLabel: "FAQ",
+      rotation: 8,
+      hoverStyles: { bgColor: "#f59e0b", textColor: "#ffffff" },
+    },
+    {
       label: "privacy policy",
       href: "/privacy-policy",
       ariaLabel: "Privacy Policy",
@@ -124,39 +124,40 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-black relative">
+    <div className="min-h-screen w-full bg-black relative">
       <BubbleMenu
         items={items}
         menuAriaLabel="Toggle navigation"
         menuBg="#ffffff"
         menuContentColor="#111111"
-        useFixedPosition={false}
+        useFixedPosition={true}
         animationEase="back.out(1.5)"
         animationDuration={0.5}
         staggerDelay={0.12}
       />
       {/* Aurora Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="fixed inset-0 z-0">
         <Aurora
           colorStops={["#7CFF67", "#B19EEF", "#5227FF"]}
           blend={0.5}
-          amplitude={0.5}
+          amplitude={0.25}
           speed={1}
         />
       </div>
 
-      {/* Content Overlay */}
-      <div className="relative z-10 w-full flex flex-col items-center justify-center min-h-screen">
+      {/* Content Container - positioned below BubbleMenu */}
+      <div className="relative z-10 w-full min-h-screen pt-24 md:pt-28 px-4">
+        <div className="flex flex-col items-center justify-start min-h-[calc(100vh-6rem)] md:min-h-[calc(100vh-7rem)]">
         {/* Permission button section */}
         {showPermissionButton && (
-          <div className="w-full max-w-4xl text-center mb-6 md:mb-8 px-4">
+          <div className="w-full max-w-4xl text-center mb-8 md:mb-12">
             <button
               onClick={requestGyroscopePermission}
-              className="px-4 py-2 md:px-6 md:py-3 bg-white text-black rounded-lg text-sm md:text-base font-semibold hover:bg-gray-200 transition-colors"
+              className="px-6 py-3 md:px-8 md:py-4 bg-white text-black rounded-lg text-base md:text-lg font-semibold hover:bg-gray-200 transition-colors"
             >
               Enable Gyroscope
             </button>
-            <p className="text-white mt-3 md:mt-4 text-xs md:text-sm px-2">
+            <p className="text-white mt-4 md:mt-6 text-sm md:text-base px-4">
               Tap to enable gyroscope control - tilt your phone to interact with
               the text!
             </p>
@@ -164,7 +165,7 @@ export default function App() {
         )}
 
         {/* TextPressure section */}
-        <div className="w-full max-w-4xl text-center flex-grow flex flex-col items-center justify-center">
+        <div className="w-full max-w-4xl text-center flex-1 flex flex-col items-center justify-center py-8 md:py-12">
           <TextPressure
             text="Vibelines"
             flex={true}
@@ -175,22 +176,22 @@ export default function App() {
             italic={true}
             textColor="#ffffff"
             strokeColor="#ff0000"
-            minFontSize={24}
+            minFontSize={28}
             gyroscopeEnabled={permissionGranted}
           />
 
-          <div>
-            <p className="text-gray-400 mt-6">
+          <div className="mt-6 md:mt-8">
+            <p className="text-gray-400 text-base md:text-lg leading-relaxed px-4">
               Your soundtrack, your emotions, your timeline.
             </p>
           </div>
 
           {/* Spotify Login Button */}
-          <div className="mt-12">
+          <div className="mt-12 md:mt-16">
             <button
               onClick={handleSpotifyLogin}
               disabled={isLoadingSpotify}
-              className={`flex items-center gap-2 md:gap-3 px-4 py-2 md:px-8 md:py-4 text-sm md:text-base font-semibold rounded-full transition-all duration-200 transform shadow-lg ${
+              className={`flex items-center gap-3 md:gap-4 px-6 py-3 md:px-10 md:py-5 text-base md:text-lg font-semibold rounded-full transition-all duration-200 transform shadow-lg ${
                 isLoadingSpotify
                   ? "bg-gray-600 text-white cursor-not-allowed"
                   : "bg-[#1DB954] hover:bg-[#1ed760] text-white hover:scale-105"
@@ -199,7 +200,7 @@ export default function App() {
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg"
                 alt="Spotify Logo"
-                className="w-6 h-6"
+                className="w-6 h-6 md:w-7 md:h-7"
               />
               {isSpotifyAuthenticated
                 ? "Generate New Timeline"
@@ -209,27 +210,29 @@ export default function App() {
         </div>
 
         {/* Footer */}
-        <div className="absolute bottom-8 left-0 right-0 text-center">
-          <p className="text-gray-400 text-sm px-4">
+        <div className="w-full text-center pb-10 md:pb-12 mt-auto">
+          <p className="text-gray-400 text-sm md:text-base leading-relaxed px-4">
             Made with ❤️ by{" "}
             <a
               href="https://www.linkedin.com/in/bek-joon-hao/"
               target="_blank"
-              style={{ color: "white" }}
+              className="text-white hover:text-gray-200 transition-colors"
             >
               Joon Hao
             </a>
-            <br />
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> • </span>
             Credits: Spotify API, Deezer API,{" "}
             <a
               href="https://huggingface.co/amaai-lab/music2emo"
               target="_blank"
-              style={{ color: "white" }}
+              className="text-white hover:text-gray-200 transition-colors"
             >
-              Music2Emotion
+              Music2Emo
             </a>
             , Gemini 2.5 Flash Lite
           </p>
+        </div>
         </div>
       </div>
     </div>

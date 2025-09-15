@@ -6,6 +6,7 @@ import MoodTimeline from "./MoodTimeline.tsx"
 import About from "./About.tsx"
 import Contact from "./Contact.tsx"
 import PrivacyPolicy from "./PrivacyPolicy.tsx"
+import FAQ from "./FAQ.tsx"
 
 // Create router with view transitions support
 const router = createBrowserRouter([
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
   {
     path: '/privacy-policy',
     element: <PrivacyPolicy />
+  },
+  {
+    path: '/faq',
+    element: <FAQ />
   }
 ])
 

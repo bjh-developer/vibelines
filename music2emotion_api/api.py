@@ -107,7 +107,7 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("🚀 Starting up and loading the Music2emo model...")
         torch.set_default_tensor_type('torch.FloatTensor')
-        torch.set_num_threads(2)
+        # torch.set_num_threads(2)
         torch.set_grad_enabled(False)
         music2emo_model = Music2emo(model_weights="saved_models/J_all.ckpt") # Initialise music2emo model
 

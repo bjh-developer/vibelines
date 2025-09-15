@@ -206,49 +206,162 @@ class AudioManager {
   private currentAudio: HTMLAudioElement | null = null;
   private fadeTimeout: NodeJS.Timeout | null = null;
   private currentPreviewUrl: string | null = null;
+  private allAudioInstances: Set<HTMLAudioElement> = new Set();
+  private currentCardId: string | number | null = null;
+  private pendingPlayPromise: Promise<void> | null = null;
 
-  async playTrack(previewUrl: string, volume: number = 0.3): Promise<void> {
-    // Don't restart the same track
-    if (this.currentPreviewUrl === previewUrl && this.currentAudio) {
+  async playTrack(previewUrl: string, cardId: string | number, volume: number = 0.3): Promise<void> {
+    // Cancel any pending play operations
+    if (this.pendingPlayPromise) {
+      console.log('🎵 Cancelling pending play operation');
+    }
+
+    // Set this as the pending operation
+    const playOperation = this._playTrackInternal(previewUrl, cardId, volume);
+    this.pendingPlayPromise = playOperation;
+
+    try {
+      await playOperation;
+    } finally {
+      // Clear pending operation if it's still the current one
+      if (this.pendingPlayPromise === playOperation) {
+        this.pendingPlayPromise = null;
+      }
+    }
+  }
+
+  private async _playTrackInternal(previewUrl: string, cardId: string | number, volume: number): Promise<void> {
+    // Don't restart the same track for the same card
+    if (this.currentPreviewUrl === previewUrl && 
+        this.currentCardId === cardId && 
+        this.currentAudio && 
+        !this.currentAudio.paused) {
+      console.log('🎵 Same track already playing for same card, skipping');
       return;
     }
 
-    // Stop current track with fade out
-    if (this.currentAudio) {
-      await this.fadeOut(this.currentAudio);
-    }
+    // Always stop all audio first - this ensures only one track plays at a time
+    await this.stopAllAudioImmediate();
 
     try {
-      console.log('🎵 Starting to play preview:', previewUrl);
+      console.log(`🎵 Starting to play preview for card ${cardId}:`, previewUrl);
       const audio = new Audio(previewUrl);
       audio.volume = 0;
       audio.loop = true;
       audio.crossOrigin = 'anonymous';
       
+      // Track this audio instance
+      this.allAudioInstances.add(audio);
+      
+      // Add event listeners for cleanup
+      audio.addEventListener('ended', () => {
+        this.cleanupAudio(audio);
+      });
+      
+      audio.addEventListener('error', () => {
+        this.cleanupAudio(audio);
+      });
+      
       // Start playing
       await audio.play();
       
-      // Fade in
+      // Double-check we're still the active operation
+      if (this.currentCardId !== null && this.currentCardId !== cardId) {
+        console.log('🎵 Card changed during audio load, stopping this audio');
+        this.cleanupAudio(audio);
+        return;
+      }
+      
+      // Set as current
       this.currentAudio = audio;
       this.currentPreviewUrl = previewUrl;
+      this.currentCardId = cardId;
       this.fadeIn(audio, volume);
       
-      console.log('🎵 Now playing preview with fade in');
+      console.log(`🎵 Now playing preview for card ${cardId} with fade in`);
     } catch (error) {
       console.error('❌ Error playing audio:', error);
     }
   }
 
+  // Immediately stop all audio without fade for quick card changes
+  private async stopAllAudioImmediate(): Promise<void> {
+    console.log('🛑 Stopping all audio immediately');
+    
+    // Clear fade timeout
+    if (this.fadeTimeout) {
+      clearTimeout(this.fadeTimeout);
+      this.fadeTimeout = null;
+    }
+    
+    // Stop current audio immediately
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+        this.currentAudio.volume = 0;
+        this.currentAudio.src = '';
+        this.currentAudio.load();
+      } catch (error) {
+        console.warn('Warning: Could not stop current audio:', error);
+      }
+    }
+    
+    // Force stop all tracked audio instances immediately
+    this.allAudioInstances.forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 0;
+        audio.src = '';
+        audio.load();
+      } catch (error) {
+        console.warn('Warning: Could not stop audio instance:', error);
+      }
+    });
+    
+    // Clear all references
+    this.allAudioInstances.clear();
+    this.currentAudio = null;
+    this.currentPreviewUrl = null;
+    this.currentCardId = null;
+
+    // Stop all page audio elements as additional safety
+    this.stopAllPageAudio();
+
+    // Small delay to ensure all operations complete
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+
+  // Get current card ID for debugging
+  getCurrentCardId(): string | number | null {
+    return this.currentCardId;
+  }
+
+  // Force stop with immediate effect (no fade)
+  stopImmediate(): void {
+    console.log('🛑 Force stopping all audio immediately');
+    this.stopAllAudioImmediate();
+  }
+
   private fadeIn(audio: HTMLAudioElement, targetVolume: number): void {
+    // Clear any existing fade timeout
+    if (this.fadeTimeout) {
+      clearTimeout(this.fadeTimeout);
+    }
+    
     const fadeStep = targetVolume / 30; // 30 steps for smoother fade
     const fadeInterval = 50; // 50ms per step = 1.5 second total
     
     let currentVolume = 0;
     const fade = () => {
-      if (currentVolume < targetVolume && audio === this.currentAudio) {
+      if (currentVolume < targetVolume && audio === this.currentAudio && !audio.paused) {
         currentVolume += fadeStep;
         audio.volume = Math.min(currentVolume, targetVolume);
-        setTimeout(fade, fadeInterval);
+        this.fadeTimeout = setTimeout(fade, fadeInterval);
+      } else {
+        // Clear timeout when fade is complete
+        this.fadeTimeout = null;
       }
     };
     fade();
@@ -261,12 +374,16 @@ class AudioManager {
       const fadeInterval = 25; // 25ms per step = 0.5 second total
       
       const fade = () => {
-        if (audio.volume > 0) {
+        if (audio.volume > 0.01) { // Stop fading when volume is very low
           audio.volume = Math.max(audio.volume - fadeStep, 0);
           setTimeout(fade, fadeInterval);
         } else {
+          // Ensure complete stop
+          audio.volume = 0;
           audio.pause();
+          audio.currentTime = 0; // Reset to beginning
           audio.src = ''; // Clear source to free memory
+          this.cleanupAudio(audio);
           resolve();
         }
       };
@@ -274,18 +391,128 @@ class AudioManager {
     });
   }
 
-  stop(): void {
-    if (this.currentAudio) {
-      this.fadeOut(this.currentAudio);
+  private cleanupAudio(audio: HTMLAudioElement): void {
+    // Remove from tracking set
+    this.allAudioInstances.delete(audio);
+    
+    // If this was the current audio, clear the reference
+    if (this.currentAudio === audio) {
       this.currentAudio = null;
       this.currentPreviewUrl = null;
+      this.currentCardId = null;
+    }
+    
+    // Ensure audio is completely stopped
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = '';
+      audio.load(); // Reset the audio element
+    } catch (error) {
+      console.warn('Warning: Could not fully cleanup audio:', error);
+    }
+  }
+
+  stop(): void {
+    console.log('🛑 Stopping all audio playback');
+    
+    // Stop current audio with fade
+    if (this.currentAudio) {
+      this.fadeOut(this.currentAudio);
+    }
+    
+    // Force stop all tracked audio instances
+    this.allAudioInstances.forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 0;
+        audio.src = '';
+        audio.load();
+      } catch (error) {
+        console.warn('Warning: Could not stop audio instance:', error);
+      }
+    });
+    
+    // Clear all references
+    this.allAudioInstances.clear();
+    this.currentAudio = null;
+    this.currentPreviewUrl = null;
+    this.currentCardId = null;
+    this.pendingPlayPromise = null;
+    
+    // Clear any pending fade timeout
+    if (this.fadeTimeout) {
+      clearTimeout(this.fadeTimeout);
+      this.fadeTimeout = null;
+    }
+
+    // Additional safety: stop ALL audio elements on the page
+    this.stopAllPageAudio();
+  }
+
+  private stopAllPageAudio(): void {
+    try {
+      // Find all audio elements on the page and stop them
+      const allAudioElements = document.querySelectorAll('audio');
+      allAudioElements.forEach(audio => {
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = 0;
+          audio.src = '';
+          audio.load();
+        } catch (error) {
+          console.warn('Warning: Could not stop page audio element:', error);
+        }
+      });
+      console.log(`🛑 Stopped ${allAudioElements.length} audio elements found on page`);
+    } catch (error) {
+      console.warn('Warning: Could not stop all page audio:', error);
     }
   }
 
   getCurrentPreviewUrl(): string | null {
     return this.currentPreviewUrl;
   }
+
+  // Debug method to check for lingering audio
+  debugAudioState(): void {
+    console.log('🔍 Audio Manager Debug State:');
+    console.log('Current audio:', this.currentAudio);
+    console.log('Current preview URL:', this.currentPreviewUrl);
+    console.log('Current card ID:', this.currentCardId);
+    console.log('Tracked audio instances:', this.allAudioInstances.size);
+    console.log('Fade timeout active:', !!this.fadeTimeout);
+    console.log('Pending play promise active:', !!this.pendingPlayPromise);
+    
+    // Check all audio elements on page
+    const allPageAudio = document.querySelectorAll('audio');
+    console.log('Total audio elements on page:', allPageAudio.length);
+    
+    allPageAudio.forEach((audio, index) => {
+      console.log(`Audio element ${index}:`, {
+        paused: audio.paused,
+        volume: audio.volume,
+        currentTime: audio.currentTime,
+        src: audio.src,
+        duration: audio.duration
+      });
+    });
+  }
 }
 
 // Export singleton instance
 export const audioManager = new AudioManager();
+
+// Global cleanup when page unloads
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    audioManager.stop();
+  });
+  
+  // Also stop audio when navigating away (for SPAs)
+  window.addEventListener('pagehide', () => {
+    audioManager.stop();
+  });
+}

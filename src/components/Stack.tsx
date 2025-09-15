@@ -114,7 +114,7 @@ export default function Stack({
         perspective: 600
       }}
     >
-      {cards.map((card, index) => {
+      {cards.slice(-4).map((card, index) => {
         const randomRotate = randomRotation ? Math.random() * 10 - 5 : 0;
 
         return (
@@ -127,8 +127,8 @@ export default function Stack({
               className="rounded-2xl overflow-hidden border-4 border-white"
               onClick={() => sendToBackOnClick && sendToBack(card.id)}
               animate={{
-                rotateZ: (cards.length - index - 1) * 4 + randomRotate,
-                scale: 1 + index * 0.06 - cards.length * 0.06,
+                rotateZ: (4 - index - 1) * 4 + randomRotate,
+                scale: 1 + index * 0.06 - 4 * 0.06,
                 transformOrigin: '90% 90%'
               }}
               initial={false}

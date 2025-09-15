@@ -59,6 +59,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   width: 100%;
+  /* Prevent zoom on double tap */
+  touch-action: manipulation;
 }
 
 #root {
@@ -72,10 +74,11 @@ input, select, textarea {
   font-size: 16px;
 }
 
-/* Improve touch target sizes */
+/* Improve touch target sizes for better mobile UX */
 button, a, [role="button"] {
   min-height: 44px;
   min-width: 44px;
+  touch-action: manipulation;
 }
 
 /* Prevent horizontal scroll */
@@ -86,8 +89,65 @@ button, a, [role="button"] {
 /* Mobile responsive text */
 @media (max-width: 768px) {
   .text-pressure-title {
-    font-size: clamp(1.5rem, 8vw, 4rem) !important;
+    font-size: clamp(2rem, 12vw, 5rem) !important;
   }
+  
+  /* Better mobile spacing */
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  /* Ensure content doesn't get cut off */
+  .min-h-screen {
+    min-height: 100dvh; /* Use dynamic viewport height on mobile */
+  }
+}
+
+/* Tablet specific optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .text-pressure-title {
+    font-size: clamp(3rem, 8vw, 6rem) !important;
+  }
+}
+
+/* Better mobile viewport handling */
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+}
+
+/* Safe area for devices with notches */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pt-24 {
+    padding-top: max(6rem, calc(env(safe-area-inset-top) + 4rem));
+  }
+  
+  .md\:pt-28 {
+    padding-top: max(7rem, calc(env(safe-area-inset-top) + 5rem));
+  }
+}
+
+/* Smooth scrolling for better UX */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus styles for accessibility */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Prevent text selection on UI elements */
+.bubble-menu,
+.bubble-menu * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 }
 
 /* Line clamp utilities for text truncation */

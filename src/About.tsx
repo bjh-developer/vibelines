@@ -12,9 +12,9 @@ export default function About() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-black relative">
+    <div className="min-h-screen w-full bg-black relative">
       {/* Aurora Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="fixed inset-0 z-0">
         <Aurora
           colorStops={["#7CFF67", "#B19EEF", "#5227FF"]}
           blend={0.5}
@@ -23,51 +23,57 @@ export default function About() {
         />
       </div>
 
-      {/* Content Overlay */}
-      <div className="relative z-10 w-full max-w-4xl text-center">
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">
-          About Vibelines
-        </h1>
+      {/* Content Container - positioned below BubbleMenu */}
+      <div className="relative z-10 w-full min-h-screen pt-10 md:pt-20 px-4">
+        <div className="flex flex-col items-center justify-start min-h-[calc(100vh-6rem)] md:min-h-[calc(100vh-7rem)]">
+          <div className="w-full max-w-4xl text-center flex-1 flex flex-col items-center justify-center py-8 md:py-12">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-8 md:mb-12">
+              About Vibelines
+            </h1>
 
-        <div className="text-gray-300 text-lg md:text-xl space-y-6 mb-12">
-          <p>
-            Inspired by{" "}
-            <a
-              href="https://www.instagram.com/reel/DLiS7qfSMjM/?igsh=MTByZG96Y2w0ZjVjcQ=="
-              style={{ color: "#7CFF67" }}
+            <div className="text-gray-300 text-base md:text-lg lg:text-xl space-y-6 mb-12 leading-relaxed">
+              <p>
+                Inspired by{" "}
+                <a
+                  href="https://www.instagram.com/reel/DLiS7qfSMjM/?igsh=MTByZG96Y2w0ZjVjcQ=="
+                  className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  @ayitsphotography's IG story about liked songs playlist
+                </a>
+                .
+              </p>
+
+              <p>
+                I wanted to transform my Spotify listening history into an emotional
+                journey, creating a beautiful timeline that visualises the mood and
+                sentiment of my music.
+              </p>
+              <p><strong>Thus,</strong> Vibelines was born.</p>
+
+              <p>
+                Using advanced Music Emotion Recognition model and LLM, Vibelines
+                analyses your favorite tracks to understand the emotional landscape
+                of your musical taste, presenting it as an interactive visual
+                experience.
+              </p>
+
+              <p>
+                Discover patterns in your listening habits and see how your musical
+                emotions evolve over time. Reminiscence your past through the
+                soundtrack of your life.
+              </p>
+            </div>
+
+            <button
+              onClick={handleBackToHome}
+              className="inline-flex items-center gap-3 px-6 py-3 md:px-8 md:py-4 bg-white text-black rounded-full font-semibold hover:bg-gray-200 transition-all duration-200 hover:scale-105 border-0 cursor-pointer text-base md:text-lg"
             >
-              @ayitsphotography's IG story about liked songs playlist
-            </a>
-            .
-          </p>
-
-          <p>
-            I wanted to transform my Spotify listening history into an emotional
-            journey, creating a beautiful timeline that visualizes the mood and
-            sentiment of your music.
-          </p>
-          <p><strong>Thus,</strong> Vibelines was born.</p>
-
-          <p>
-            Using advanced Music Emotion Recognition model and LLM, Vibelines
-            analyses your favorite tracks to understand the emotional landscape
-            of your musical taste, presenting it as an interactive visual
-            experience.
-          </p>
-
-          <p>
-            Discover patterns in your listening habits and see how your musical
-            emotions evolve over time. Reminiscence your past through the
-            soundtrack of your life.
-          </p>
+              ← Back to Home
+            </button>
+          </div>
         </div>
-
-        <button
-          onClick={handleBackToHome}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-semibold hover:bg-gray-200 transition-colors border-0 cursor-pointer"
-        >
-          ← Back to Home
-        </button>
       </div>
     </div>
   );

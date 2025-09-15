@@ -101,9 +101,9 @@ export default function BubbleMenu({
   const containerClassName = [
     'bubble-menu',
     useFixedPosition ? 'fixed' : 'absolute',
-    'left-0 right-0 top-8',
-    'flex items-center justify-between',
-    'gap-4 px-8',
+    'left-0 right-0 top-0',
+    'flex items-center justify-end',
+    'gap-4 px-4 py-6 md:px-8 md:py-8',
     'pointer-events-none',
     'z-[1001]',
     className
@@ -218,11 +218,14 @@ export default function BubbleMenu({
         }
         @media (max-width: 899px) {
           .bubble-menu-items {
-            padding-top: 120px;
+            padding-top: 100px;
             align-items: flex-start;
+            padding-left: 1rem;
+            padding-right: 1rem;
           }
           .bubble-menu-items .pill-list {
-            row-gap: 16px;
+            row-gap: 12px;
+            max-width: 100%;
           }
           .bubble-menu-items .pill-list .pill-col {
             flex: 0 0 100% !important;
@@ -230,17 +233,45 @@ export default function BubbleMenu({
             overflow: visible;
           }
           .bubble-menu-items .pill-link {
-            font-size: clamp(1.2rem, 3vw, 4rem);
-            padding: clamp(1rem, 2vw, 2rem) 0;
-            min-height: 80px !important;
+            font-size: clamp(1.25rem, 4vw, 2rem);
+            padding: clamp(1rem, 3vw, 1.5rem) 1rem;
+            min-height: 60px !important;
+            border-radius: 30px;
           }
           .bubble-menu-items .pill-link:hover {
-            transform: scale(1.06);
+            transform: scale(1.03);
             background: var(--hover-bg);
             color: var(--hover-color);
           }
           .bubble-menu-items .pill-link:active {
-            transform: scale(.94);
+            transform: scale(.97);
+          }
+          
+          /* Better mobile menu button positioning */
+          .bubble-menu {
+            padding-top: max(1.5rem, env(safe-area-inset-top, 0) + 1rem);
+            padding-bottom: 1rem;
+          }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 480px) {
+          .bubble-menu {
+            padding-top: max(1.25rem, env(safe-area-inset-top, 0) + 0.75rem);
+            padding-bottom: 0.75rem;
+          }
+          .bubble-menu-items {
+            padding-top: 80px;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+          }
+          .bubble-menu-items .pill-list {
+            row-gap: 10px;
+          }
+          .bubble-menu-items .pill-link {
+            font-size: clamp(1.1rem, 4.5vw, 1.8rem);
+            padding: 0.875rem 0.75rem;
+            min-height: 50px !important;
           }
         }
       `}</style>
@@ -293,9 +324,11 @@ export default function BubbleMenu({
             'bg-white',
             'shadow-[0_4px_16px_rgba(0,0,0,0.12)]',
             'pointer-events-auto',
-            'w-12 h-12 md:w-14 md:h-14',
+            'w-14 h-14 md:w-16 md:h-16',
             'border-0 cursor-pointer p-0',
-            'will-change-transform'
+            'will-change-transform',
+            'transition-transform duration-200 ease-out',
+            'hover:scale-105 active:scale-95'
           ].join(' ')}
           onClick={handleToggle}
           aria-label={menuAriaLabel}
@@ -305,8 +338,8 @@ export default function BubbleMenu({
           <span
             className="menu-line block mx-auto rounded-[2px]"
             style={{
-              width: 26,
-              height: 2,
+              width: 28,
+              height: 2.5,
               background: menuContentColor,
               transform: isMenuOpen ? 'translateY(4px) rotate(45deg)' : 'none'
             }}
@@ -315,8 +348,8 @@ export default function BubbleMenu({
             className="menu-line short block mx-auto rounded-[2px]"
             style={{
               marginTop: '6px',
-              width: 26,
-              height: 2,
+              width: 28,
+              height: 2.5,
               background: menuContentColor,
               transform: isMenuOpen ? 'translateY(-4px) rotate(-45deg)' : 'none'
             }}

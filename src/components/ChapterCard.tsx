@@ -11,6 +11,7 @@ interface ChapterCardProps {
   width: number;
   height: number;
   isInFront?: boolean;
+  cardId?: string | number; // Add unique identifier for audio management
 }
 
 export default function ChapterCard({ 
@@ -21,7 +22,8 @@ export default function ChapterCard({
   albumCover,
   width, 
   height,
-  isInFront = false
+  isInFront = false,
+  cardId
 }: ChapterCardProps) {
   const [backgroundImage, setBackgroundImage] = useState<string>(
     albumCover || ''
@@ -30,11 +32,19 @@ export default function ChapterCard({
 
   // Handle audio playback when card is in front
   useEffect(() => {
-    if (isInFront && previewUrl) {
-      console.log('🎵 Card is in front, starting audio playback');
-      audioManager.playTrack(previewUrl, 0.25); // Softer volume as requested
+    if (isInFront && previewUrl && cardId) {
+      console.log(`🎵 Card ${cardId} is in front, starting audio playback`);
+      
+      // Add a small delay to ensure any previous audio has stopped
+      const playAudio = async () => {
+        // Wait a bit to ensure clean state
+        await new Promise(resolve => setTimeout(resolve, 50));
+        await audioManager.playTrack(previewUrl, cardId, 0.25);
+      };
+      
+      playAudio();
     }
-  }, [isInFront, previewUrl]);
+  }, [isInFront, previewUrl, cardId]);
 
   useEffect(() => {
     console.log('🎨 ChapterCard useEffect - soundtrack:', soundtrack, 'albumCover:', albumCover);

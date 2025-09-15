@@ -30,6 +30,7 @@ export default function Loading() {
   const [moodsAndDatesData, setMoodsAndDatesData] = useState<
     MoodsAndDatesData[]
   >([]);
+  const [isAnalysisActive, setIsAnalysisActive] = useState(true);
 
   const openrouterkey = import.meta.env.VITE_OPENROUTER_API_KEY;
 
@@ -91,8 +92,13 @@ export default function Loading() {
   // Load user data and fetch all liked songs
   const loadSpotifyUserData = async () => {
     try {
+      // Check if analysis should continue
+      if (!isAnalysisActive) return;
+
       // Test Supabase connection first
       await testSupabaseConnection();
+
+      if (!isAnalysisActive) return;
 
       setLoadingMessage("Loading your profile...");
       console.log("🎵 Loading Spotify user data...");
@@ -100,10 +106,14 @@ export default function Loading() {
       setSpotifyUser(user);
       console.log("✅ User data loaded:", user.display_name);
 
+      if (!isAnalysisActive) return;
+
       // Fetch all liked songs and log them
       setLoadingMessage("Fetching your liked songs...");
       console.log("🎶 Fetching all liked songs...");
       const allLikedSongs = await getAllLikedSongs();
+
+      if (!isAnalysisActive) return;
 
       console.log(`🎉 Retrieved ${allLikedSongs.length} liked songs:`);
       console.log("=".repeat(50));
@@ -118,6 +128,12 @@ export default function Loading() {
       let songsNotInDatabase = 0;
 
       for (let index = 0; index < allLikedSongs.length; index++) {
+        // Check if analysis should continue before processing each song
+        if (!isAnalysisActive) {
+          console.log("🛑 Analysis stopped by user navigation");
+          return;
+        }
+
         const track = allLikedSongs[index];
         const artistNames = track.artists
           .map((artist: any) => artist.name)
@@ -195,6 +211,12 @@ export default function Loading() {
               artistNames
             );
 
+            // Check again after API call in case user navigated away
+            if (!isAnalysisActive) {
+              console.log("🛑 Analysis stopped after API call");
+              return;
+            }
+
             moodsAndDataArray.push({
               track_name: track.name,
               artist_name: artistNames,
@@ -263,19 +285,39 @@ export default function Loading() {
 ${moodsDataString}
 
 Instructions:
-- Segment the mood timeline into 10-15 “chapters” based on emotional/life shifts (if fewer moods, adapt to 3–5).
-- For each chapter:
-    - Give a creative, metaphorical title (use varied imagery across chapters).
-    - Provide an approximate date range.
-    - Write a vivid narrative (<50 words) in second person, describing dominant emotions, transitions, and growth (do not quote mood labels directly).
-    - Highlight seasonal/temporal shifts.
-    - Select a fitting soundtrack from the provided songs in that period.
-    - The phases of individual chapters should be balanced (there shouldn't be one phase that is only a month while another is a whole year).
+Step 1: Analyze the moods data for each year individually (ONLY USE THE DATA PROVIDED IN THE LIST ABOVE). Identify dominant emotions, mood shifts, and seasonal changes within that year.
+Step 2: Based on this analysis, split each year into chapters so that:
+  - Every year is represented by 1-3 chapters.
+  - Chapters reflect clear emotional shifts within the year.
+  - No chapter spans more than 12 months unless data is sparse.
+Step 3: Ensure chapters are ordered chronologically.
+Step 4: For each chapter:
+  - Give a creative, metaphorical title.
+  - Provide an approximate date range (DO NOT include date ranges that does not exist from data).
+  - Write a vivid narrative (<50 words) in second person, describing dominant emotions, transitions, and growth.
+  - Highlight seasonal/temporal shifts.
+  - Select a fitting soundtrack from the provided songs in that period.
+Step 5: The JSON example below is only a formatting template:
+  - Do NOT reuse or copy its chapter titles, phases, contents, or soundtracks.
+  - Only follow the structure, keys, and formatting style.
+  - All values (Chapters, Phases, Contents, Soundtracks) must come from the provided moods data.
 
-Return ONLY valid JSON, following this format:
-{"Chapters": {"1": "The Echoes of Love and Longing","2": "Embracing the Upbeat","3": "Unveiling Inner Strength"},"Phases": {"1": "(March 2018)","2": "(April - July 2018)","3": "(August 2018 - January 2019)"},"Contents": {"1": "You begin in a space of tender reflection, where love's sweetness intertwines with a gentle ache. Your early soundtrack speaks of romantic yearning and the bittersweet beauty of memories, a ballad-like whisper to the heart.","2": "The tempo remains elevated, a consistent stream of uplifting tracks that celebrate fun and life's bright moments. There's a sense of buoyant optimism fueling your days.","3": "A powerful undercurrent surfaces, marked by anthems of resilience and introspection. You find strength in soaring melodies and declarations of self-belief, navigating themes of emotional depth."},"Soundtracks": {"1": "\\"When I Was Your Man\\" by Bruno Mars","2": "\\"Perfect Strangers\\" by Jonas Blue, JP Cooper","3": "\\"Thunder\\" by Imagine Dragons"}}`;
+* Make sure the number of chapters, phases, contents, and soundtracks all match, phases should only be up to the latest date given in the list above.
+
+Return ONLY valid JSON, following this format/example:
+{"Chapters": {"1": "The Echoes of Love and Longing","2": "Embracing the Upbeat","3": "Unveiling Inner Strength"},"Phases": {"1": "(March - April 2018)","2": "(April - July 2018)","3": "(August 2018 - January 2019)"},"Contents": {"1": "You begin in a space of tender reflection, where love's sweetness intertwines with a gentle ache.","2": "The tempo remains elevated, celebrating life's bright moments.","3": "A powerful undercurrent surfaces, marked by anthems of resilience and introspection."},"Soundtracks": {"1": "\\"When I Was Your Man\\" by Bruno Mars","2": "\\"Perfect Strangers\\" by Jonas Blue, JP Cooper","3": "\\"Thunder\\" by Imagine Dragons"}}`;
 
         console.log(`🤖 LLM API Prompt: ${prompt}`);
+
+        function estimateTokens(text: string): number {
+          const normalizedText = text.trim().replace(/\s+/g, ' ');
+          const charBasedEstimate = Math.ceil(normalizedText.length / 4);
+          return Math.ceil(charBasedEstimate * 1.1);
+        }
+
+        const estimatedMaxTokens = Math.ceil(estimateTokens(prompt) * 0.2);
+
+        console.log(`🧮 Max reasoning tokens: ${estimatedMaxTokens}`);
 
         const llmResponse = await fetch(
           "https://openrouter.ai/api/v1/chat/completions",
@@ -298,6 +340,11 @@ Return ONLY valid JSON, following this format:
                   ],
                 },
               ],
+              reasoning: {
+                // "effort": "low",
+                max_tokens: estimatedMaxTokens,
+                exclude: true,
+              },
             }),
           }
         );
@@ -316,6 +363,22 @@ Return ONLY valid JSON, following this format:
               responseText = jsonMatch[1];
               console.log("📝 Extracted JSON from markdown:", responseText);
             }
+          } else if (responseText.includes("```")) {
+            // Handle cases where it might just be ``` without json
+            const jsonMatch = responseText.match(/```\s*(\{[\s\S]*?\})\s*```/);
+            if (jsonMatch) {
+              responseText = jsonMatch[1];
+              console.log("📝 Extracted JSON from code block:", responseText);
+            }
+          }
+
+          // Clean up any remaining backticks or extra whitespace
+          responseText = responseText.trim();
+          if (responseText.startsWith("```")) {
+            responseText = responseText.replace(/^```[a-z]*\s*/, "");
+          }
+          if (responseText.endsWith("```")) {
+            responseText = responseText.replace(/\s*```$/, "");
           }
 
           // Parse the JSON string into an object
@@ -325,6 +388,7 @@ Return ONLY valid JSON, following this format:
             console.log("✅ Successfully parsed timeline data:", timelineData);
           } catch (parseError) {
             console.error("❌ Failed to parse JSON:", parseError);
+            console.error("❌ Raw response text:", responseText);
             setError("Failed to process timeline data. Please try again.");
             return;
           }
@@ -379,6 +443,11 @@ Return ONLY valid JSON, following this format:
       // Not authenticated, redirect back to home
       navigate("/");
     }
+
+    // Cleanup function to stop analysis when component unmounts
+    return () => {
+      setIsAnalysisActive(false);
+    };
   }, [navigate]);
 
   if (error) {
@@ -388,7 +457,7 @@ Return ONLY valid JSON, following this format:
           <Aurora
             colorStops={["#7CFF67", "#B19EEF", "#5227FF"]}
             blend={0.5}
-            amplitude={0.5}
+            amplitude={0.25}
             speed={1}
           />
         </div>
@@ -398,7 +467,10 @@ Return ONLY valid JSON, following this format:
           <h2 className="text-white text-2xl font-bold mb-4">Oops!</h2>
           <p className="text-gray-400 mb-8">{error}</p>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => {
+              setIsAnalysisActive(false);
+              navigate("/");
+            }}
             className="px-6 py-3 bg-[#1DB954] hover:bg-[#1ed760] text-white font-semibold rounded-full transition-all duration-200"
           >
             Try Again
