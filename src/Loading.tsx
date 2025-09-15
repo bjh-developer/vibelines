@@ -10,6 +10,7 @@ import {
 } from "./utils/spotifyAuth";
 import { supabase } from "./utils/supabaseClient";
 import { Spinner } from "@/components/ui/shadcn-io/spinner";
+import { analyzeSongMoods } from "./utils/emotionApi";
 
 // Interface for song with mood analysis
 interface MoodsAndDatesData {
@@ -55,51 +56,24 @@ export default function Loading() {
     }
   };
 
-  // Function to call your API for mood analysis
-  const apiKey = import.meta.env.VITE_M2E_API_KEY;
-  if (!apiKey) {
-    console.error("❌ M2E API key is not set in environment variables");
-  } else {
-    console.log("🔑 M2E API Key loaded");
-  }
-  
+  // Function to call your API for mood analysis using the new proxy
   const getMoodFromAPI = async (
     songTitle: string,
     artistName: string
   ): Promise<string[] | null> => {
     try {
-      const response = await fetch(
-        `http://34.70.119.50/analyse&predict/${encodeURIComponent(
-          songTitle
-        )}/${encodeURIComponent(artistName)}`,
-        {
-          method: "POST",
-          headers: {
-            "api-key": apiKey,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.error(
-          `API call failed for "${songTitle}" by ${artistName}: ${response.status}`
-        );
-        return null;
-      }
-
-      const data = await response.json();
-      return data.predicted_moods || null;
+      console.log(`🎭 Calling mood analysis API for: "${songTitle}" by ${artistName}`);
+      
+      const result = await analyzeSongMoods(songTitle, artistName);
+      return result.predicted_moods;
     } catch (error) {
       console.error(
-        `Error calling API for "${songTitle}" by ${artistName}:`,
+        `❌ Error calling mood analysis API for "${songTitle}" by ${artistName}:`,
         error
       );
       return null;
     }
-  };
-
-  // Load user data and fetch all liked songs
+  };  // Load user data and fetch all liked songs
   const loadSpotifyUserData = async () => {
     try {
       // Check if analysis should continue

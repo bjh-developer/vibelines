@@ -1,5 +1,20 @@
 {
+  "functions": {
+    "api/deezer/search.ts": {
+      "runtime": "@vercel/node@18"
+    },
+    "api/proxy.js": {
+      "runtime": "@vercel/node@18"
+    },
+    "api/music-emotion.js": {
+      "runtime": "@vercel/node@18"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
