@@ -56,6 +56,13 @@ export default function Loading() {
   };
 
   // Function to call your API for mood analysis
+  const apiKey = import.meta.env.VITE_M2E_API_KEY;
+  if (!apiKey) {
+    console.error("❌ M2E API key is not set in environment variables");
+  } else {
+    console.log("🔑 M2E API Key loaded");
+  }
+  
   const getMoodFromAPI = async (
     songTitle: string,
     artistName: string
@@ -68,7 +75,7 @@ export default function Loading() {
         {
           method: "POST",
           headers: {
-            "api-key": import.meta.env.VITE_M2E_API_KEY,
+            "api-key": apiKey,
             "Content-Type": "application/json",
           },
         }

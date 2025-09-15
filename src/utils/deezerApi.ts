@@ -95,33 +95,62 @@ export const getDeezerPreviewUrl = async (songTitle: string, artistName: string)
     await rateLimiter.waitIfNeeded();
 
     const searchQuery = formatDeezerQuery(songTitle, artistName);
-    // Use Vite proxy to avoid CORS issues
-    const deezerUrl = `/api/deezer/search?q=${encodeURIComponent(searchQuery)}&limit=1`;
+    
+    // Try different endpoints in order of preference
+    const endpoints = [
+      // Production: Use Vercel API route
+      `/api/deezer/search?q=${encodeURIComponent(searchQuery)}&limit=1`,
+      // Fallback: Direct API (might work due to CORS policy changes)
+      `https://api.deezer.com/search?q=${encodeURIComponent(searchQuery)}&limit=1`
+    ];
     
     console.log(`🎵 Searching Deezer for: ${songTitle} by ${artistName}`);
-    console.log(`🔗 Deezer URL: ${deezerUrl}`);
 
-    const response = await fetch(deezerUrl);
-    
-    if (!response.ok) {
-      throw new Error(`Deezer API request failed: ${response.status}`);
-    }
+    for (const url of endpoints) {
+      try {
+        console.log(`🔗 Trying: ${url}`);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (compatible; VibeLines/1.0)'
+          }
+        });
+        
+        if (!response.ok) {
+          console.log(`❌ Endpoint failed with status: ${response.status}`);
+          continue;
+        }
 
-    const data: DeezerSearchResult = await response.json();
-    
-    if (data.data.length > 0 && data.data[0]?.preview) {
-      const previewUrl = data.data[0].preview;
-      
-      // Cache the result
-      deezerCache.set(cacheKey, previewUrl);
-      
-      console.log(`✅ Found Deezer preview for "${songTitle}" by ${artistName}`);
-      return previewUrl;
-    } else {
-      console.log(`❌ No Deezer preview found for "${songTitle}" by ${artistName}`);
-      deezerCache.set(cacheKey, ''); // Cache empty result to avoid repeated requests
-      return null;
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          console.log(`❌ Endpoint returned non-JSON: ${contentType}`);
+          continue;
+        }
+
+        const data: DeezerSearchResult = await response.json();
+        
+        if (data.data && data.data.length > 0 && data.data[0]?.preview) {
+          const previewUrl = data.data[0].preview;
+          deezerCache.set(cacheKey, previewUrl);
+          console.log(`✅ Found Deezer preview for "${songTitle}" by ${artistName}`);
+          return previewUrl;
+        } else {
+          console.log(`❌ No preview found in response for "${songTitle}" by ${artistName}`);
+          deezerCache.set(cacheKey, '');
+          return null;
+        }
+        
+      } catch (endpointError) {
+        console.log(`❌ Endpoint error:`, endpointError);
+        continue;
+      }
     }
+    
+    console.log(`❌ All endpoints failed for "${songTitle}" by ${artistName}`);
+    deezerCache.set(cacheKey, '');
+    return null;
+    
   } catch (error) {
     console.error(`❌ Error fetching Deezer preview for "${songTitle}" by ${artistName}:`, error);
     return null;
@@ -176,25 +205,64 @@ export const testDeezerApi = async (): Promise<boolean> => {
     console.log('🧪 Testing Deezer API...');
     
     const testQuery = formatDeezerQuery("Shape of You", "Ed Sheeran");
-    const testUrl = `https://api.deezer.com/search?q=${encodeURIComponent(testQuery)}&limit=1`;
+    
+    // Test both proxy and direct API
+    const proxyUrl = `/api/deezer/search?q=${encodeURIComponent(testQuery)}&limit=1`;
+    const directUrl = `https://api.deezer.com/search?q=${encodeURIComponent(testQuery)}&limit=1`;
     
     console.log('🔗 Test query:', testQuery);
-    console.log('🔗 Test URL:', testUrl);
+    console.log('🔗 Proxy URL:', proxyUrl);
+    console.log('🔗 Direct URL:', directUrl);
     
-    const response = await fetch(testUrl);
-    
-    if (!response.ok) {
-      console.error('❌ Deezer API test failed:', response.status);
-      return false;
+    // Try proxy first
+    try {
+      console.log('Testing Vercel API proxy endpoint...');
+      const proxyResponse = await fetch(proxyUrl);
+      const contentType = proxyResponse.headers.get('content-type');
+      
+      console.log('Proxy response status:', proxyResponse.status);
+      console.log('Proxy response content-type:', contentType);
+      
+      if (proxyResponse.ok && contentType?.includes('application/json')) {
+        const data: DeezerSearchResult = await proxyResponse.json();
+        console.log('✅ Proxy test successful:', {
+          found: data.data.length,
+          hasPreview: data.data[0]?.preview ? 'Yes' : 'No'
+        });
+        return true;
+      } else {
+        const text = await proxyResponse.text();
+        console.error('❌ Proxy returned non-JSON response:', text.substring(0, 200));
+      }
+    } catch (proxyError) {
+      console.error('❌ Proxy test failed:', proxyError);
     }
     
-    const data: DeezerSearchResult = await response.json();
-    console.log('✅ Deezer API test successful:', {
-      found: data.data.length,
-      hasPreview: data.data[0]?.preview ? 'Yes' : 'No',
-      preview: data.data[0]?.preview
-    });
-    return true;
+    // Try direct API as fallback
+    try {
+      console.log('Testing direct API...');
+      const directResponse = await fetch(directUrl, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; VibeLines/1.0)'
+        }
+      });
+      
+      if (!directResponse.ok) {
+        throw new Error(`Direct API failed: ${directResponse.status}`);
+      }
+      
+      const data: DeezerSearchResult = await directResponse.json();
+      console.log('✅ Direct API test successful:', {
+        found: data.data.length,
+        hasPreview: data.data[0]?.preview ? 'Yes' : 'No'
+      });
+      return true;
+    } catch (directError) {
+      console.error('❌ Direct API test failed:', directError);
+    }
+    
+    return false;
   } catch (error) {
     console.error('❌ Deezer API test error:', error);
     return false;
