@@ -13,6 +13,13 @@ export default async function handler(req, res) {
     // Extract endpoint and parameters from the request
     const { endpoint = 'health', song_title, artist_name } = req.query;
     
+    console.log('🎯 Music emotion proxy called:', {
+      endpoint,
+      song_title,
+      artist_name,
+      method: req.method
+    });
+    
     // Your VM's FastAPI URL
     const VM_API_URL = 'http://34.70.119.50';
     
@@ -27,7 +34,7 @@ export default async function handler(req, res) {
     // Add API key for protected endpoints
     if (endpoint !== 'health' && endpoint !== 'device-info') {
       // You should set this in Vercel environment variables
-      const apiKey = process.env.VITE_M2E_API_KEY;
+      const apiKey = process.env.M2E_API_KEY;
       if (apiKey) {
         requestOptions.headers['api-key'] = apiKey;
       }
@@ -52,6 +59,7 @@ export default async function handler(req, res) {
           });
           return;
         }
+        // Your backend expects the exact format: /analyse&predict/{title}/{artist}
         targetUrl = `${VM_API_URL}/analyse&predict/${encodeURIComponent(song_title)}/${encodeURIComponent(artist_name)}`;
         requestOptions.method = 'POST';
         break;
@@ -61,14 +69,18 @@ export default async function handler(req, res) {
         return;
     }
     
-    console.log(`Proxying ${requestOptions.method} request to: ${targetUrl}`);
+    console.log(`🚀 Proxying ${requestOptions.method} request to: ${targetUrl}`);
+    console.log('📋 Request headers:', requestOptions.headers);
     
     // Make the request to your FastAPI backend
     const response = await fetch(targetUrl, requestOptions);
 
+    console.log('📨 Backend response status:', response.status);
+    console.log('📨 Backend response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Backend API error: ${response.status} - ${errorText}`);
+      console.error(`❌ Backend API error: ${response.status} - ${errorText}`);
       throw new Error(`Backend API responded with status: ${response.status}`);
     }
 
