@@ -326,8 +326,8 @@ Return ONLY valid JSON, following this format/example:
               ],
               reasoning: {
                 // "effort": "low",
-                max_tokens: estimatedMaxTokens,
-                exclude: true,
+                "max_tokens": estimatedMaxTokens,
+                "exclude": true,
               },
             }),
           }
