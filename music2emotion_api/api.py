@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from music2emo import Music2emo
@@ -14,6 +14,9 @@ from deezer import Client
 from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
+import dotenv
+
+dotenv.load_dotenv()
 
 
 # Configure logging
@@ -156,6 +159,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+API_KEY = os.getenv("M2E_API_KEY")
+
+@app.middleware("http")
+async def check_api_key(request: Request, call_next):
+    # Allow health check and device info endpoints without API key
+    if request.url.path in ["/", "/device-info"]:
+        return await call_next(request)
+    
+    # Check API key for all other endpoints
+    api_key = request.headers.get("api-key")
+    if not api_key or api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden: Invalid or missing API key")
+    
+    return await call_next(request)
 
 
 @app.get("/")

@@ -68,6 +68,7 @@ export default function Loading() {
         {
           method: "POST",
           headers: {
+            "api-key": import.meta.env.VITE_M2E_API_KEY,
             "Content-Type": "application/json",
           },
         }
