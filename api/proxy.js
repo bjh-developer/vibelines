@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     const { endpoint = '/' } = req.query;
     
     // Your VM's FastAPI URL
-    const VM_API_URL = 'http://34.70.119.50';
+    const VM_API_URL = 'http://104.198.230.255';
     const targetUrl = `${VM_API_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
     
     console.log(`Proxying ${req.method} request to: ${targetUrl}`);
