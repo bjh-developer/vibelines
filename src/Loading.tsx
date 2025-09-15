@@ -62,7 +62,7 @@ export default function Loading() {
   ): Promise<string[] | null> => {
     try {
       const response = await fetch(
-        `http://localhost:8000/analyse&predict/${encodeURIComponent(
+        `http://34.70.119.50/analyse&predict/${encodeURIComponent(
           songTitle
         )}/${encodeURIComponent(artistName)}`,
         {
