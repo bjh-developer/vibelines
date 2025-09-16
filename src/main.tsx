@@ -9,6 +9,7 @@ import Contact from "./Contact.tsx"
 import PrivacyPolicy from "./PrivacyPolicy.tsx"
 import FAQ from "./FAQ.tsx"
 import SpotifyCallback from "./components/SpotifyCallback.tsx"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 // Create router with view transitions support
 const router = createBrowserRouter([
@@ -65,5 +66,6 @@ createRoot(document.getElementById("root")!).render(
   <>
     <RouterProvider router={router} />
     <Analytics />
+    <SpeedInsights />
   </>
 )
