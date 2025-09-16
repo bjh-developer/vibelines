@@ -262,7 +262,7 @@ export default function App() {
               </button>
             </div>
             <div
-              className="mt-6 md:mt-8 transition-transform duration-50 active:scale-95 cursor-pointer"
+              className="mt-6 md:mt-8 transition-transform duration-50 active:scale-95 cursor-pointer hover:scale-105"
               onClick={() => {
                 triggerHaptic();
               }}
