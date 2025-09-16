@@ -7,14 +7,14 @@ export default function About() {
 
   const handleBackToHome = () => {
     startViewTransition(() => {
-      navigate("/");
+      navigate("/", { viewTransition: true });
     });
   };
 
   return (
-    <div className="min-h-screen w-full bg-black relative">
+    <div className="min-h-screen w-full bg-black relative" style={{ minHeight: 'max(100vh, 100dvh)' }}>
       {/* Aurora Background */}
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 z-0" style={{ height: 'max(100vh, 100dvh)' }}>
         <Aurora
           colorStops={["#7CFF67", "#B19EEF", "#5227FF"]}
           blend={0.5}
@@ -24,7 +24,7 @@ export default function About() {
       </div>
 
       {/* Content Container - positioned below BubbleMenu */}
-      <div className="relative z-10 w-full min-h-screen pt-10 md:pt-20 px-4">
+      <div className="relative z-10 w-full min-h-screen pt-10 md:pt-20 px-4" style={{ minHeight: 'max(100vh, 100dvh)' }}>
         <div className="flex flex-col items-center justify-start min-h-[calc(100vh-6rem)] md:min-h-[calc(100vh-7rem)]">
           <div className="w-full max-w-4xl text-center flex-1 flex flex-col items-center justify-center py-8 md:py-12">
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-8 md:mb-12">
@@ -46,23 +46,46 @@ export default function About() {
               </p>
 
               <p>
-                I wanted to transform my Spotify listening history into an emotional
-                journey, creating a beautiful timeline that visualises the mood and
-                sentiment of my music.
+                I wanted to transform my Spotify liked songs' playlist into an
+                emotional journey, creating a beautiful timeline that visualises
+                the mood and sentiment of my music.
               </p>
-              <p><strong>Thus,</strong> Vibelines was born.</p>
-
               <p>
-                Using advanced Music Emotion Recognition model and LLM, Vibelines
-                analyses your favorite tracks to understand the emotional landscape
-                of your musical taste, presenting it as an interactive visual
-                experience.
+                <strong>Thus,</strong> Vibelines was born.
               </p>
 
               <p>
-                Discover patterns in your listening habits and see how your musical
-                emotions evolve over time. Reminiscence your past through the
-                soundtrack of your life.
+                Using{" "}
+                <a
+                  href="https://huggingface.co/amaai-lab/music2emo"
+                  target="_blank"
+                  className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline"
+                >
+                  state-of-the-art Music Emotion Recognition model
+                </a>{" "}
+                and{" "}
+                <a
+                  href="https://deepmind.google/models/gemini/flash-lite/"
+                  target="_blank"
+                  className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline"
+                >
+                  Large Language Model
+                </a>
+                , Vibelines analyses your liked songs to understand the
+                emotional landscape of your musical taste, presenting it as an
+                interactive visual experience.
+              </p>
+
+              <p>
+                Discover patterns in your listening habits and see how your
+                musical emotions evolve over time. Reminiscence your past
+                through the soundtrack of your life.
+              </p>
+
+              <p>
+                <a href="https://github.com/bjh-developer/vibelines" target="_blank" rel="noopener noreferrer" className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline">
+                  This website is open sourced!
+                </a>
               </p>
             </div>
 

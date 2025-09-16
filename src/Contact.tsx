@@ -1,20 +1,23 @@
 import { useNavigate } from "react-router-dom";
 import Aurora from "./components/AuroraBG";
 import { startViewTransition } from "./utils/viewTransitions";
+import { useHaptic } from "use-haptic";
 
 export default function Contact() {
   const navigate = useNavigate();
+  const { triggerHaptic } = useHaptic();
 
   const handleBackToHome = () => {
+    triggerHaptic();
     startViewTransition(() => {
-      navigate("/");
+      navigate("/", { viewTransition: true });
     });
   };
 
   return (
-    <div className="min-h-screen w-full bg-black relative">
+    <div className="min-h-screen w-full bg-black relative" style={{ minHeight: 'max(100vh, 100dvh)' }}>
       {/* Aurora Background */}
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 z-0" style={{ height: 'max(100vh, 100dvh)' }}>
         <Aurora
           colorStops={["#7CFF67", "#B19EEF", "#5227FF"]}
           blend={0.5}
@@ -24,7 +27,7 @@ export default function Contact() {
       </div>
 
       {/* Content Container - positioned below BubbleMenu */}
-      <div className="relative z-10 w-full min-h-screen pt-20 md:pt-21 px-4">
+      <div className="relative z-10 w-full min-h-screen pt-10 md:pt-20 px-4" style={{ minHeight: 'max(100vh, 100dvh)' }}>
         <div className="flex flex-col items-center justify-start min-h-[calc(100vh-6rem)] md:min-h-[calc(100vh-7rem)]">
           <div className="w-full max-w-4xl text-center flex-1 flex flex-col items-center justify-center py-8 md:py-12">
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-8 md:mb-12">
@@ -68,6 +71,16 @@ export default function Contact() {
                     className="text-blue-400 hover:text-blue-300 transition-colors text-base md:text-lg"
                   >
                     joonhaobek@gmail.com
+                  </a>
+                </div>
+
+                <div className="p-4 md:p-6 bg-white/10 rounded-lg backdrop-blur-sm hover:bg-white/15 transition-all duration-200">
+                  <h3 className="text-lg md:text-xl font-semibold text-white mb-2">GitHub</h3>
+                  <a 
+                    href="https://github.com/bjh-developer" 
+                    className="text-blue-400 hover:text-blue-300 transition-colors text-base md:text-lg"
+                  >
+                    bjh-developer
                   </a>
                 </div>
                 

@@ -1,39 +1,46 @@
 import { useState, useCallback } from 'react';
 import html2canvas from 'html2canvas-pro';
+import { useHaptic } from "use-haptic";
 
 interface UseScreenshotProps {
   targetElementId: string;
 }
 
 export const useScreenshot = ({ targetElementId }: UseScreenshotProps) => {
+  const { triggerHaptic } = useHaptic();
+  triggerHaptic();
   const [isCapturing, setIsCapturing] = useState(false);
 
   const takeScreenshot = useCallback(async () => {
     try {
       setIsCapturing(true);
 
-      // Find the Aurora background element and temporarily make it non-fixed
-      const auroraElements = document.querySelectorAll('[class*="aurora"], [style*="position: fixed"]');
-      const originalStyles: { element: HTMLElement; originalStyle: string }[] = [];
+      // // Find the Aurora background element and temporarily make it non-fixed
+      // const auroraElements = document.querySelectorAll('[class*="aurora"], [style*="position: fixed"]');
+      // const originalStyles: { element: HTMLElement; originalStyle: string }[] = [];
       
-      // Temporarily change fixed positioned elements to absolute
-      auroraElements.forEach((el) => {
-        const element = el as HTMLElement;
-        if (element.style.position === 'fixed') {
-          originalStyles.push({
-            element,
-            originalStyle: element.style.cssText
-          });
-          element.style.position = 'absolute';
-          element.style.top = '0';
-          element.style.left = '0';
-          element.style.right = '0';
-          element.style.bottom = '0';
-        }
-      });
+      // // Temporarily change fixed positioned elements to absolute
+      // auroraElements.forEach((el) => {
+      //   const element = el as HTMLElement;
+      //   if (element.style.position === 'fixed') {
+      //     originalStyles.push({
+      //       element,
+      //       originalStyle: element.style.cssText
+      //     });
+      //     element.style.position = 'absolute';
+      //     element.style.top = '0';
+      //     element.style.left = '0';
+      //     element.style.right = '0';
+      //     element.style.bottom = '0';
+      //   }
+      // });
 
       // Capture the entire document body to include background
-      const targetElement = document.body;
+      const targetElement = document.getElementById(targetElementId);
+      
+      if (!targetElement) {
+        throw new Error(`Element with id "${targetElementId}" not found`);
+      }
 
       // Create Instagram Story canvas (9:16 aspect ratio)
       const storyWidth = 1080;
@@ -44,16 +51,17 @@ export const useScreenshot = ({ targetElementId }: UseScreenshotProps) => {
         useCORS: true,
         allowTaint: true,
         logging: false,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        x: 0,
-        y: 0,
+        backgroundColor: 'rgba(0, 0, 0, 1)',
+        // width: window.innerWidth,
+        // height: window.innerHeight,
+        // x: 0,
+        // y: 0,
       });
 
-      // Restore original styles
-      originalStyles.forEach(({ element, originalStyle }) => {
-        element.style.cssText = originalStyle;
-      });
+      // // Restore original styles
+      // originalStyles.forEach(({ element, originalStyle }) => {
+      //   element.style.cssText = originalStyle;
+      // });
 
       // Create final Instagram story canvas
       const storyCanvas = document.createElement('canvas');
@@ -95,8 +103,8 @@ export const useScreenshot = ({ targetElementId }: UseScreenshotProps) => {
       ctx.fillRect(0, storyHeight - overlayHeight, storyWidth, overlayHeight);
 
       // Add website URL higher up to avoid Instagram UI
-      const urlText = 'vibelines.vercel.app';
-      ctx.font = 'bold 32px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+      const urlText = 'Discover your\'s @ vibelines.vercel.app';
+      ctx.font = 'bold 32px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
       ctx.textAlign = 'center';
       
       // Measure text to create background
@@ -112,7 +120,7 @@ export const useScreenshot = ({ targetElementId }: UseScreenshotProps) => {
       const bgHeight = textHeight + padding;
       const borderRadius = 20;
       
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 1)';
       ctx.beginPath();
       ctx.roundRect(bgX, bgY, bgWidth, bgHeight, borderRadius);
       ctx.fill();
@@ -131,15 +139,15 @@ export const useScreenshot = ({ targetElementId }: UseScreenshotProps) => {
       storyCanvas.toBlob(async (blob) => {
         if (!blob) throw new Error('Failed to create image blob');
 
-        const file = new File([blob], 'vibeline-story.png', { type: 'image/png' });
+        const file = new File([blob], 'my-vibeline.png', { type: 'image/png' });
 
         // Try Web Share API first (mobile)
         if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
           try {
             await navigator.share({
               files: [file],
-              title: 'My Vibeline Journey',
-              text: 'Check out my musical journey! 🎵✨'
+              title: 'My Vibeline',
+              text: 'Check out my 🎵Vibeline✨!\n\nDiscover your\'s 👇\nhttps://vibelines.vercel.app'
             });
           } catch (shareError) {
             // If share fails, fallback to download

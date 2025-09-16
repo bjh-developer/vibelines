@@ -32,6 +32,13 @@ export default function MoodTimeline() {
       hoverStyles: { bgColor: "#10b981", textColor: "#ffffff" },
     },
     {
+      label: "faq",
+      href: "/faq",
+      ariaLabel: "FAQ",
+      rotation: 8,
+      hoverStyles: { bgColor: "#0f0bf5ff", textColor: "#ffffff" },
+    },
+    {
       label: "privacy policy",
       href: "/privacy-policy",
       ariaLabel: "Privacy Policy",
@@ -73,28 +80,28 @@ export default function MoodTimeline() {
   useEffect(() => {
     // Also stop audio immediately when navigating
     const handleBeforeUnload = () => {
-      console.log('🎵 Page unloading - stopping audio');
+      console.log("🎵 Page unloading - stopping audio");
       audioManager.stop();
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        console.log('🎵 Page hidden - stopping audio');
+        console.log("🎵 Page hidden - stopping audio");
         audioManager.stop();
       }
     };
 
     // Add event listeners
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      console.log('🎵 Stopping audio on component unmount');
+      console.log("🎵 Stopping audio on component unmount");
       audioManager.stop();
-      
+
       // Remove event listeners
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -149,7 +156,12 @@ export default function MoodTimeline() {
         // The top card is now the last one in the array (since we reversed it)
         const newFrontId = newCards[newCards.length - 1].id;
         if (newFrontId !== frontCardId) {
-          console.log("🃏 Front card changed from", frontCardId, "to:", newFrontId);
+          console.log(
+            "🃏 Front card changed from",
+            frontCardId,
+            "to:",
+            newFrontId
+          );
           // Immediately stop any playing audio to prevent overlaps during fast swiping
           audioManager.stopImmediate();
           setFrontCardId(newFrontId);
@@ -161,7 +173,7 @@ export default function MoodTimeline() {
 
   return (
     <div
-      id="vibeline-container"
+      // id="vibeline-container"
       className="w-full bg-black relative overflow-y-auto overflow-x-hidden"
       style={{ minHeight: "100vh" }}
     >
@@ -175,9 +187,7 @@ export default function MoodTimeline() {
         animationDuration={0.5}
         staggerDelay={0.12}
       />
-      <div
-        className="fixed inset-0 z-0"
-      >
+      <div className="fixed inset-0 z-0">
         <Aurora
           colorStops={["#7CFF67", "#B19EEF", "#5227FF"]}
           blend={0.5}
@@ -185,9 +195,12 @@ export default function MoodTimeline() {
           speed={1}
         />
       </div>
-      
+
       {/* Content Container - positioned below BubbleMenu */}
-      <div className="relative z-10 w-full min-h-screen pt-24 md:pt-28 px-4">
+      <div
+        id="vibeline-container"
+        className="relative z-10 w-full min-h-screen pt-15 md:pt-20 px-4"
+      >
         <div className="flex flex-col items-center justify-start min-h-[calc(100vh-6rem)] md:min-h-[calc(100vh-7rem)]">
           <div className="w-full max-w-6xl flex flex-col items-center py-4 md:py-8">
             <div className="text-center mb-6 md:mb-8">
@@ -195,11 +208,13 @@ export default function MoodTimeline() {
                 Your Vibeline
               </h1>
               <p className="text-gray-400 text-sm md:text-base lg:text-lg leading-relaxed">
-                Swipe through your musical chapters ({frontCardId} / {cardsData.length}).
+                Swipe through your musical chapters ({frontCardId} /{" "}
+                {cardsData.length}).<br />🎧 Turn on sound!
               </p>
 
               {/* Share Screenshot Button */}
               <button
+                data-html2canvas-ignore
                 onClick={takeScreenshot}
                 disabled={isCapturing}
                 className={`mt-4 px-6 py-2 md:px-8 md:py-3 rounded-full font-semibold transition-all duration-300 text-sm md:text-base ${
@@ -208,7 +223,7 @@ export default function MoodTimeline() {
                     : "bg-gradient-to-r from-[#7CFF67] to-[#5227FF] text-white hover:scale-105 shadow-lg"
                 }`}
               >
-                {isCapturing ? "📸 Capturing..." : "📸 Share Story"}
+                {isCapturing ? "📸 Capturing..." : "📸 Share Vibeline"}
               </button>
             </div>
 
@@ -235,19 +250,14 @@ export default function MoodTimeline() {
               />
             </div>
 
-            <div>
+            <div data-html2canvas-ignore className="mb-10">
               <a href="https://www.buymeacoffee.com/bjh21" target="_blank">
-                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" className="height: 60px !important;width: 217px !important;" />
+                <img
+                  src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png"
+                  alt="Buy Me A Coffee"
+                  className="h-10 w-auto"
+                />
               </a>
-            </div>
-
-            <div className="text-center max-w-2xl mt-8 md:mt-12 pb-8">
-              <p className="text-gray-500 text-xs md:text-sm leading-relaxed">
-                Swipe the cards to explore different chapters of your
-                musical journey.
-                <br />
-                Turn on sound!
-              </p>
             </div>
           </div>
         </div>

@@ -50,7 +50,7 @@
 }
 
 /* Mobile-friendly styles */
-body {
+html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden; /* Prevent horizontal scrollbars only */
@@ -58,6 +58,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   /* Prevent zoom on double tap */
   touch-action: manipulation;
@@ -65,6 +66,7 @@ body {
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden; /* Prevent horizontal scrollbars only */
   overflow-y: auto; /* Allow vertical scrolling */
 }
@@ -115,6 +117,63 @@ button, a, [role="button"] {
 @supports (height: 100dvh) {
   .min-h-screen {
     min-height: 100dvh;
+  }
+  
+  /* Fix Aurora background on mobile */
+  .fixed.inset-0 {
+    height: 100dvh;
+  }
+}
+
+/* Fallback for browsers that don't support dvh */
+@supports not (height: 100dvh) {
+  /* Use JavaScript-based solution or fallback */
+  .fixed.inset-0 {
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+  }
+}
+
+/* Ensure Aurora background covers full viewport on mobile */
+@media (max-width: 768px) {
+  .fixed.inset-0 {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    position: fixed !important;
+  }
+  
+  /* Ensure pages have proper minimum height */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  
+  /* Fix content container heights on mobile */
+  .min-h-\[calc\(100vh-6rem\)\] {
+    min-height: calc(100dvh - 6rem);
+  }
+  
+  .min-h-\[calc\(100vh-7rem\)\] {
+    min-height: calc(100dvh - 7rem);
+  }
+  
+  /* Force Aurora canvas to fill container */
+  .fixed.inset-0 > div {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+  }
+  
+  .fixed.inset-0 canvas {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
   }
 }
 

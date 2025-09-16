@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { startViewTransition } from '../utils/viewTransitions';
+import { useHaptic } from "use-haptic";
 
 type MenuItem = {
   label: string;
@@ -82,6 +83,9 @@ export default function BubbleMenu({
   animationDuration = 0.5,
   staggerDelay = 0.12
 }: BubbleMenuProps) {
+  const { triggerHaptic } = useHaptic();
+  triggerHaptic();
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const navigate = useNavigate();
@@ -93,8 +97,9 @@ export default function BubbleMenu({
   const menuItems = items?.length ? items : DEFAULT_ITEMS;
 
   const handleNavigation = (href: string) => {
+    triggerHaptic();
     startViewTransition(() => {
-      navigate(href);
+      navigate(href, { viewTransition: true });
     });
   };
 

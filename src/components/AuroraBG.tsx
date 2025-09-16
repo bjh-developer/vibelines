@@ -147,9 +147,14 @@ export default function Aurora(props: AuroraProps) {
       if (!ctn) return;
       const width = ctn.offsetWidth;
       const height = ctn.offsetHeight;
-      renderer.setSize(width, height);
+      
+      // Ensure minimum height on mobile
+      const minHeight = window.innerHeight;
+      const finalHeight = Math.max(height, minHeight);
+      
+      renderer.setSize(width, finalHeight);
       if (program) {
-        program.uniforms.uResolution.value = [width, height];
+        program.uniforms.uResolution.value = [width, finalHeight];
       }
     }
     window.addEventListener("resize", resize);
@@ -177,6 +182,12 @@ export default function Aurora(props: AuroraProps) {
     });
 
     const mesh = new Mesh(gl, { geometry, program });
+    
+    // Ensure canvas fills container
+    gl.canvas.style.width = '100%';
+    gl.canvas.style.height = '100%';
+    gl.canvas.style.display = 'block';
+    
     ctn.appendChild(gl.canvas);
 
     let animateId = 0;
@@ -209,5 +220,5 @@ export default function Aurora(props: AuroraProps) {
     };
   }, [amplitude]);
 
-  return <div ref={ctnDom} className="w-full h-full" />;
+  return <div ref={ctnDom} className="w-full h-full" style={{ width: '100%', height: '100%', minHeight: 'inherit' }} />;
 }

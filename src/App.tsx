@@ -5,13 +5,34 @@ import Aurora from "./components/AuroraBG";
 import TextPressure from "./components/TextPressure";
 import { initiateSpotifyAuth, isAuthenticated } from "./utils/spotifyAuth";
 import BubbleMenu from "./components/BubbleMenu";
+("use client");
+import {
+  Announcement,
+  AnnouncementTag,
+  AnnouncementTitle,
+} from "@/components/ui/shadcn-io/announcement";
+import { ArrowUpRightIcon } from "lucide-react";
+import { useHaptic } from "use-haptic";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
 
 export default function App() {
+  const { triggerHaptic } = useHaptic();
   const navigate = useNavigate();
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [showPermissionButton, setShowPermissionButton] = useState(false);
 
   const requestGyroscopePermission = async () => {
+    triggerHaptic();
     if (
       typeof (DeviceOrientationEvent as any).requestPermission === "function"
     ) {
@@ -23,14 +44,42 @@ export default function App() {
           console.log(
             "Gyroscope permission granted - updating TextPressure component"
           );
+          // Save permission to localStorage
+          localStorage.setItem("gyroscopePermissionGranted", "true");
           setPermissionGranted(true);
           setShowPermissionButton(false);
+        } else {
+          // Save denied permission as well
+          localStorage.setItem("gyroscopePermissionGranted", "false");
         }
       } catch (error) {
         console.log("Permission denied");
+        localStorage.setItem("gyroscopePermissionGranted", "false");
       }
     }
   };
+
+  // Function to reset gyroscope permission (for debugging or user reset)
+  const resetGyroscopePermission = () => {
+    localStorage.removeItem("gyroscopePermissionGranted");
+    setPermissionGranted(false);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const needsPermission =
+      typeof (DeviceOrientationEvent as any).requestPermission === "function";
+    if (isIOS && needsPermission) {
+      setShowPermissionButton(true);
+    }
+  };
+
+  // Add reset function to window for debugging (only in development)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      (window as any).resetGyroscopePermission = resetGyroscopePermission;
+      console.log(
+        "Debug: Use window.resetGyroscopePermission() to reset permission"
+      );
+    }
+  }, []);
 
   // Check if we need to show permission button (iOS 13+)
   useEffect(() => {
@@ -38,10 +87,21 @@ export default function App() {
     const needsPermission =
       typeof (DeviceOrientationEvent as any).requestPermission === "function";
 
+    console.log("Gyroscope permission check:", { isIOS, needsPermission });
+
     if (isIOS && needsPermission) {
+      // On iOS, always show the permission button initially since permission
+      // needs to be requested fresh each session, even if previously granted
+      console.log("iOS detected, showing permission button for fresh session");
+      setPermissionGranted(false);
       setShowPermissionButton(true);
     } else {
+      // Not iOS or doesn't need permission
+      console.log(
+        "Gyroscope permission not needed or not iOS, enabling automatically"
+      );
       setPermissionGranted(true);
+      setShowPermissionButton(false);
     }
   }, []);
 
@@ -51,6 +111,7 @@ export default function App() {
 
   // Handle Spotify login/regenerate timeline
   const handleSpotifyLogin = async () => {
+    triggerHaptic();
     try {
       setIsLoadingSpotify(true);
       if (isSpotifyAuthenticated) {
@@ -86,13 +147,6 @@ export default function App() {
   }, [navigate]);
 
   const items = [
-    // {
-    //   label: "home",
-    //   href: "/",
-    //   ariaLabel: "Home",
-    //   rotation: -8,
-    //   hoverStyles: { bgColor: "#3b82f6", textColor: "#ffffff" },
-    // },
     {
       label: "about",
       href: "/about",
@@ -105,7 +159,7 @@ export default function App() {
       href: "/faq",
       ariaLabel: "FAQ",
       rotation: 8,
-      hoverStyles: { bgColor: "#f59e0b", textColor: "#ffffff" },
+      hoverStyles: { bgColor: "#0f0bf5ff", textColor: "#ffffff" },
     },
     {
       label: "privacy policy",
@@ -148,91 +202,169 @@ export default function App() {
       {/* Content Container - positioned below BubbleMenu */}
       <div className="relative z-10 w-full min-h-screen pt-24 md:pt-28 px-4">
         <div className="flex flex-col items-center justify-start min-h-[calc(100vh-6rem)] md:min-h-[calc(100vh-7rem)]">
-        {/* Permission button section */}
-        {showPermissionButton && (
-          <div className="w-full max-w-4xl text-center mb-8 md:mb-12">
-            <button
-              onClick={requestGyroscopePermission}
-              className="px-6 py-3 md:px-8 md:py-4 bg-white text-black rounded-lg text-base md:text-lg font-semibold hover:bg-gray-200 transition-colors"
+          {/* Permission button section */}
+          {showPermissionButton && (
+            <div className="w-full max-w-4xl text-center mb-8 md:mb-12">
+              <button
+                onClick={requestGyroscopePermission}
+                className="px-6 py-3 md:px-8 md:py-4 bg-white text-black rounded-lg text-base md:text-lg font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Enable Gyroscope
+              </button>
+              <p className="text-white mt-4 md:mt-6 text-sm md:text-base px-4">
+                Tap to enable gyroscope control - tilt your phone to interact
+                with the text!
+              </p>
+            </div>
+          )}
+
+          {/* TextPressure section */}
+          <div className="w-full max-w-4xl text-center flex-1 flex flex-col items-center justify-center py-8 md:py-12">
+            <TextPressure
+              text="Vibelines"
+              flex={true}
+              alpha={false}
+              stroke={false}
+              width={true}
+              weight={true}
+              italic={true}
+              textColor="#ffffff"
+              strokeColor="#ff0000"
+              minFontSize={28}
+              gyroscopeEnabled={permissionGranted}
+            />
+
+            <div className="mt-6 md:mt-8">
+              <p className="text-gray-400 text-base md:text-lg leading-relaxed px-4">
+                Your soundtrack, your emotions, your timeline.
+              </p>
+            </div>
+
+            {/* Spotify Login Button */}
+            <div className="mt-12 md:mt-16">
+              <button
+                onClick={handleSpotifyLogin}
+                disabled={isLoadingSpotify}
+                className={`flex items-center gap-3 md:gap-4 px-6 py-3 md:px-10 md:py-5 text-base md:text-lg font-semibold rounded-full transition-all duration-200 transform shadow-lg ${
+                  isLoadingSpotify
+                    ? "bg-gray-600 text-white cursor-not-allowed"
+                    : "bg-[#1DB954] hover:bg-[#1ed760] text-white hover:scale-105"
+                }`}
+              >
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg"
+                  alt="Spotify Logo"
+                  className="w-6 h-6 md:w-7 md:h-7"
+                />
+                {isSpotifyAuthenticated
+                  ? "Generate New Timeline"
+                  : "Connect with Spotify"}
+              </button>
+            </div>
+            <div
+              className="mt-6 md:mt-8 transition-transform duration-50 active:scale-95 cursor-pointer"
+              onClick={() => {
+                triggerHaptic();
+              }}
             >
-              Enable Gyroscope
-            </button>
-            <p className="text-white mt-4 md:mt-6 text-sm md:text-base px-4">
-              Tap to enable gyroscope control - tilt your phone to interact with
-              the text!
+              <Drawer>
+                <DrawerTrigger>
+                  <Announcement className="bg-sky-100 text-sky-700" themed>
+                    <AnnouncementTag>🙏</AnnouncementTag>
+                    <AnnouncementTitle>
+                      I'm tiny, please be patient if I take time/error!
+                      <ArrowUpRightIcon
+                        className="shrink-0 opacity-70"
+                        size={16}
+                      />
+                    </AnnouncementTitle>
+                  </Announcement>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader>
+                    <DrawerTitle>🤔 Why am I tiny?</DrawerTitle>
+                    <DrawerDescription>
+                      I'm running on a very small budget, thus I'm powered by a
+                      small computer that can only handle limited requests at a
+                      time. If I take a bit longer or run into an error, please
+                      bear with me as I work to serve you the best I can! Your
+                      patience means a lot. 🙏
+                      <br />
+                      <br />
+                      If you are feeling generous, consider supporting me
+                      through "buy me a coffee" so I can keep improving!
+                      <br />
+                      <br />
+                      <a
+                        href="https://www.buymeacoffee.com/bjh21"
+                        target="_blank"
+                        className="inline-block"
+                      >
+                        <img
+                          src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png"
+                          alt="Buy Me A Coffee"
+                          className="h-10 w-auto"
+                        />
+                      </a>
+                    </DrawerDescription>
+                  </DrawerHeader>
+                  <DrawerFooter>
+                    <DrawerClose>
+                      <Button variant="outline">Understood 👍</Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="w-full text-center pb-25 md:pb-10 mt-auto">
+            <p className="text-gray-400 text-sm md:text-base leading-relaxed px-4">
+              Made with ❤️ by{" "}
+              <a
+                href="https://www.linkedin.com/in/bek-joon-hao/"
+                target="_blank"
+                className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline"
+              >
+                Joon Hao
+              </a>
+              <br className="hidden sm:block" />
+              <span className="sm:hidden"> • </span>
+              Credits:{" "}
+              <a
+                href="https://developer.spotify.com/documentation/web-api"
+                target="_blank"
+                className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline"
+              >
+                Spotify API
+              </a>
+              ,{" "}
+              <a
+                href="https://developers.deezer.com/api"
+                target="_blank"
+                className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline"
+              >
+                Deezer API
+              </a>
+              ,{" "}
+              <a
+                href="https://huggingface.co/amaai-lab/music2emo"
+                target="_blank"
+                className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline"
+              >
+                Music2Emo
+              </a>
+              ,{" "}
+              <a
+                href="https://deepmind.google/models/gemini/flash-lite/"
+                target="_blank"
+                className="text-[#7CFF67] hover:text-[#8FFF7C] transition-colors underline"
+              >
+                Gemini 2.5 Flash Lite
+              </a>
             </p>
           </div>
-        )}
-
-        {/* TextPressure section */}
-        <div className="w-full max-w-4xl text-center flex-1 flex flex-col items-center justify-center py-8 md:py-12">
-          <TextPressure
-            text="Vibelines"
-            flex={true}
-            alpha={false}
-            stroke={false}
-            width={true}
-            weight={true}
-            italic={true}
-            textColor="#ffffff"
-            strokeColor="#ff0000"
-            minFontSize={28}
-            gyroscopeEnabled={permissionGranted}
-          />
-
-          <div className="mt-6 md:mt-8">
-            <p className="text-gray-400 text-base md:text-lg leading-relaxed px-4">
-              Your soundtrack, your emotions, your timeline.
-            </p>
-          </div>
-
-          {/* Spotify Login Button */}
-          <div className="mt-12 md:mt-16">
-            <button
-              onClick={handleSpotifyLogin}
-              disabled={isLoadingSpotify}
-              className={`flex items-center gap-3 md:gap-4 px-6 py-3 md:px-10 md:py-5 text-base md:text-lg font-semibold rounded-full transition-all duration-200 transform shadow-lg ${
-                isLoadingSpotify
-                  ? "bg-gray-600 text-white cursor-not-allowed"
-                  : "bg-[#1DB954] hover:bg-[#1ed760] text-white hover:scale-105"
-              }`}
-            >
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg"
-                alt="Spotify Logo"
-                className="w-6 h-6 md:w-7 md:h-7"
-              />
-              {isSpotifyAuthenticated
-                ? "Generate New Timeline"
-                : "Connect with Spotify"}
-            </button>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="w-full text-center pb-10 md:pb-12 mt-auto">
-          <p className="text-gray-400 text-sm md:text-base leading-relaxed px-4">
-            Made with ❤️ by{" "}
-            <a
-              href="https://www.linkedin.com/in/bek-joon-hao/"
-              target="_blank"
-              className="text-white hover:text-gray-200 transition-colors"
-            >
-              Joon Hao
-            </a>
-            <br className="hidden sm:block" />
-            <span className="sm:hidden"> • </span>
-            Credits: Spotify API, Deezer API,{" "}
-            <a
-              href="https://huggingface.co/amaai-lab/music2emo"
-              target="_blank"
-              className="text-white hover:text-gray-200 transition-colors"
-            >
-              Music2Emo
-            </a>
-            , Gemini 2.5 Flash Lite
-          </p>
-        </div>
         </div>
       </div>
     </div>
