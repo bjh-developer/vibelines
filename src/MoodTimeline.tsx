@@ -154,61 +154,10 @@ const useTimelineData = (timeline: any) => {
 };
 
 /**
- * Hook for managing audio playback and mobile interaction
+ * Hook for managing audio playback and cleanup
  */
 const useAudioManager = () => {
-  const [showMobileAudioPrompt, setShowMobileAudioPrompt] = useState(false);
-  const [userHasInteracted, setUserHasInteracted] = useState(false);
-
   useEffect(() => {
-    // Check if this is a mobile device
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // Show audio prompt for mobile users
-      setShowMobileAudioPrompt(true);
-      
-      // Function to handle user interaction and enable audio
-      const enableAudioOnInteraction = async () => {
-        console.log('🎵 Mobile user interaction detected - enabling audio');
-        setUserHasInteracted(true);
-        setShowMobileAudioPrompt(false);
-        
-        try {
-          // Create a silent audio to unlock the audio context
-          const audio = new Audio();
-          audio.volume = 0;
-          audio.muted = true;
-          
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            await playPromise;
-            audio.pause();
-            audio.remove();
-            console.log('🎵 Audio context unlocked for mobile');
-          }
-        } catch (error) {
-          console.warn('🎵 Could not unlock audio context:', error);
-        }
-        
-        // Remove event listeners after first interaction
-        document.removeEventListener('touchstart', enableAudioOnInteraction);
-        document.removeEventListener('touchend', enableAudioOnInteraction);
-        document.removeEventListener('click', enableAudioOnInteraction);
-      };
-      
-      // Add event listeners for user interaction
-      document.addEventListener('touchstart', enableAudioOnInteraction, { once: true, passive: true });
-      document.addEventListener('touchend', enableAudioOnInteraction, { once: true, passive: true });
-      document.addEventListener('click', enableAudioOnInteraction, { once: true, passive: true });
-      
-      return () => {
-        document.removeEventListener('touchstart', enableAudioOnInteraction);
-        document.removeEventListener('touchend', enableAudioOnInteraction);
-        document.removeEventListener('click', enableAudioOnInteraction);
-      };
-    }
-
     // Stop audio when leaving the page
     const handleBeforeUnload = () => {
       console.log("🎵 Page unloading - stopping audio");
@@ -235,8 +184,6 @@ const useAudioManager = () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
-
-  return { showMobileAudioPrompt, userHasInteracted };
 };
 
 /**
@@ -290,7 +237,6 @@ interface HeaderProps {
   totalCards: number;
   isCapturing: boolean;
   onTakeScreenshot: () => void;
-  showMobileAudioPrompt: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -298,75 +244,35 @@ const Header: React.FC<HeaderProps> = ({
   totalCards,
   isCapturing,
   onTakeScreenshot,
-  showMobileAudioPrompt,
-}) => {
-  const handleEnableAudio = async () => {
-    try {
-      // Create a silent audio to enable the audio context
-      const audio = new Audio();
-      audio.volume = 0;
-      const playPromise = audio.play();
-      
-      if (playPromise !== undefined) {
-        await playPromise;
-        audio.pause();
-        audio.remove();
-        console.log('🎵 Audio context enabled via manual button');
-      }
-    } catch (error) {
-      console.log('🎵 Manual audio enable failed:', error);
-    }
-  };
+}) => (
+  <div className="text-center mb-6 md:mb-8">
+    <h1 className="text-white text-2xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4">
+      Your Vibeline
+    </h1>
+    <p className="text-gray-400 text-sm md:text-base lg:text-lg leading-relaxed">
+      Swipe through your musical chapters ({frontCardId} / {totalCards}).
+      <br />
+      {UI_CONFIG.swipeInstructions.soundEmoji}{" "}
+      {UI_CONFIG.swipeInstructions.instructionText}
+    </p>
 
-  return (
-    <div className="text-center mb-6 md:mb-8">
-      <h1 className="text-white text-2xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4">
-        Your Vibeline
-      </h1>
-      <p className="text-gray-400 text-sm md:text-base lg:text-lg leading-relaxed">
-        Swipe through your musical chapters ({frontCardId} / {totalCards}).
-        <br />
-        {UI_CONFIG.swipeInstructions.soundEmoji}{" "}
-        {UI_CONFIG.swipeInstructions.instructionText}
-      </p>
-
-      {/* Mobile Audio Enable Prompt */}
-      {showMobileAudioPrompt && (
-        <div className="mt-4 mx-4 p-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black rounded-xl shadow-lg">
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            <span className="text-lg">🎵</span>
-            <span className="font-semibold text-sm">Enable Audio for Full Experience</span>
-          </div>
-          <p className="text-xs mb-3 opacity-80">
-            Tap anywhere or press the button below to enable audio playback
-          </p>
-          <button
-            onClick={handleEnableAudio}
-            className="px-4 py-2 bg-black text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition-colors shadow-md"
-          >
-            🔊 Enable Audio
-          </button>
-        </div>
-      )}
-
-      {/* Share Screenshot Button */}
-      <button
-        data-html2canvas-ignore
-        onClick={onTakeScreenshot}
-        disabled={isCapturing}
-        className={`mt-4 px-6 py-2 md:px-8 md:py-3 rounded-full font-semibold transition-all duration-300 text-sm md:text-base ${
-          isCapturing
-            ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-            : "bg-gradient-to-r from-[#7CFF67] to-[#5227FF] text-white hover:scale-105 shadow-lg"
-        }`}
-      >
-        {isCapturing
-          ? UI_CONFIG.screenshot.buttonText.capturing
-          : UI_CONFIG.screenshot.buttonText.default}
-      </button>
-    </div>
-  );
-};
+    {/* Share Screenshot Button */}
+    <button
+      data-html2canvas-ignore
+      onClick={onTakeScreenshot}
+      disabled={isCapturing}
+      className={`mt-4 px-6 py-2 md:px-8 md:py-3 rounded-full font-semibold transition-all duration-300 text-sm md:text-base ${
+        isCapturing
+          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+          : "bg-gradient-to-r from-[#7CFF67] to-[#5227FF] text-white hover:scale-105 shadow-lg"
+      }`}
+    >
+      {isCapturing
+        ? UI_CONFIG.screenshot.buttonText.capturing
+        : UI_CONFIG.screenshot.buttonText.default}
+    </button>
+  </div>
+);
 
 /**
  * Support footer component
@@ -407,7 +313,7 @@ export default function MoodTimeline(): React.ReactElement {
   // Custom hooks
   const { cardsData } = useTimelineData(timeline);
   const { frontCardId, handleCardOrderChange } = useCardManager(cardsData);
-  const { showMobileAudioPrompt } = useAudioManager();
+  useAudioManager();
 
   // Screenshot hook
   const { isCapturing, takeScreenshot } = useScreenshot({
@@ -468,7 +374,6 @@ export default function MoodTimeline(): React.ReactElement {
               totalCards={cardsData.length}
               isCapturing={isCapturing}
               onTakeScreenshot={takeScreenshot}
-              showMobileAudioPrompt={showMobileAudioPrompt}
             />
 
             <div className="w-full flex items-center justify-center mb-12 md:mb-16">

@@ -269,7 +269,7 @@ export const testDeezerApi = async (): Promise<boolean> => {
   }
 };
 
-// Audio manager for smooth music transitions with mobile support
+// Audio manager for smooth music transitions
 class AudioManager {
   private currentAudio: HTMLAudioElement | null = null;
   private fadeTimeout: NodeJS.Timeout | null = null;
@@ -277,72 +277,8 @@ class AudioManager {
   private allAudioInstances: Set<HTMLAudioElement> = new Set();
   private currentCardId: string | number | null = null;
   private pendingPlayPromise: Promise<void> | null = null;
-  private hasUserInteracted: boolean = false;
-  private audioContext: AudioContext | null = null;
-  private pendingTrack: { previewUrl: string; cardId: string | number; volume: number } | null = null;
-
-  constructor() {
-    this.setupUserInteractionListeners();
-  }
-
-  private setupUserInteractionListeners(): void {
-    const enableAudio = async () => {
-      console.log('🎵 User interaction detected - enabling audio for AudioManager');
-      this.hasUserInteracted = true;
-      
-      try {
-        // Initialize AudioContext on user interaction (required for mobile)
-        if (!this.audioContext) {
-          this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        }
-        
-        if (this.audioContext.state === 'suspended') {
-          await this.audioContext.resume();
-          console.log('🎵 AudioContext resumed');
-        }
-      } catch (error) {
-        console.warn('🎵 Could not initialize AudioContext:', error);
-      }
-      
-      // If there's a pending track, play it now
-      if (this.pendingTrack) {
-        const { previewUrl, cardId, volume } = this.pendingTrack;
-        this.pendingTrack = null;
-        setTimeout(() => {
-          this.playTrack(previewUrl, cardId, volume);
-        }, 100);
-      }
-      
-      // Remove listeners after first interaction
-      document.removeEventListener('touchstart', enableAudio);
-      document.removeEventListener('touchend', enableAudio);
-      document.removeEventListener('click', enableAudio);
-      document.removeEventListener('keydown', enableAudio);
-    };
-
-    // Add multiple event listeners for different types of user interaction
-    document.addEventListener('touchstart', enableAudio, { once: true, passive: true });
-    document.addEventListener('touchend', enableAudio, { once: true, passive: true });
-    document.addEventListener('click', enableAudio, { once: true, passive: true });
-    document.addEventListener('keydown', enableAudio, { once: true, passive: true });
-  }
-
-  private isMobile(): boolean {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
 
   async playTrack(previewUrl: string, cardId: string | number, volume: number = 0.3): Promise<void> {
-    console.log(`🎵 Attempting to play track for card ${cardId}`);
-    console.log(`🎵 User has interacted: ${this.hasUserInteracted}`);
-    console.log(`🎵 Is mobile: ${this.isMobile()}`);
-
-    // If user hasn't interacted yet, store the request for later
-    if (!this.hasUserInteracted) {
-      console.log('🎵 User interaction required - storing play request');
-      this.pendingTrack = { previewUrl, cardId, volume };
-      return;
-    }
-
     // Cancel any pending play operations
     if (this.pendingPlayPromise) {
       console.log('🎵 Cancelling pending play operation');
@@ -378,20 +314,9 @@ class AudioManager {
     try {
       console.log(`🎵 Starting to play preview for card ${cardId}:`, previewUrl);
       const audio = new Audio(previewUrl);
-      
-      // Mobile-optimized audio settings
       audio.volume = 0;
       audio.loop = true;
       audio.crossOrigin = 'anonymous';
-      
-      // Mobile-specific attributes
-      if (this.isMobile()) {
-        audio.setAttribute('playsinline', 'true'); // Prevent fullscreen on iOS
-        audio.setAttribute('webkit-playsinline', 'true'); // Older iOS support
-        audio.preload = 'metadata'; // Conservative preload for mobile
-      } else {
-        audio.preload = 'auto';
-      }
       
       // Track this audio instance
       this.allAudioInstances.add(audio);
@@ -401,46 +326,12 @@ class AudioManager {
         this.cleanupAudio(audio);
       });
       
-      audio.addEventListener('error', (e) => {
-        console.error('🎵 Audio error:', e);
+      audio.addEventListener('error', () => {
         this.cleanupAudio(audio);
       });
       
-      // For mobile, wait for the audio to be ready before playing
-      if (this.isMobile()) {
-        await new Promise<void>((resolve, reject) => {
-          const onCanPlay = () => {
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.removeEventListener('error', onError);
-            resolve();
-          };
-          const onError = () => {
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.removeEventListener('error', onError);
-            reject(new Error('Audio failed to load'));
-          };
-          
-          if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
-            resolve();
-          } else {
-            audio.addEventListener('canplay', onCanPlay);
-            audio.addEventListener('error', onError);
-            
-            // Timeout after 5 seconds
-            setTimeout(() => {
-              audio.removeEventListener('canplay', onCanPlay);
-              audio.removeEventListener('error', onError);
-              reject(new Error('Audio load timeout'));
-            }, 5000);
-          }
-        });
-      }
-      
       // Start playing
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        await playPromise;
-      }
+      await audio.play();
       
       // Double-check we're still the active operation
       if (this.currentCardId !== null && this.currentCardId !== cardId) {
@@ -458,14 +349,6 @@ class AudioManager {
       console.log(`🎵 Now playing preview for card ${cardId} with fade in`);
     } catch (error) {
       console.error('❌ Error playing audio:', error);
-      
-      // If it's a user interaction error on mobile, reset the interaction flag
-      if (error instanceof Error && (error.name === 'NotAllowedError' || error.message.includes('user interaction'))) {
-        console.log('🎵 Play blocked - resetting user interaction flag');
-        this.hasUserInteracted = false;
-        this.pendingTrack = { previewUrl, cardId, volume };
-        this.setupUserInteractionListeners();
-      }
     }
   }
 
@@ -527,74 +410,6 @@ class AudioManager {
   stopImmediate(): void {
     console.log('🛑 Force stopping all audio immediately');
     this.stopAllAudioImmediate();
-  }
-
-  // Regular stop method with fade out
-  stop(): void {
-    console.log('🛑 Stopping audio with fade out');
-    if (this.currentAudio) {
-      this.fadeOut(this.currentAudio);
-    } else {
-      this.stopAllAudioImmediate();
-    }
-  }
-
-  // Search track method for compatibility (delegates to Deezer API)
-  async searchTrack(trackTitle: string): Promise<Array<{ title: string; artist: string; preview: string }> | null> {
-    try {
-      // Extract artist and title from the track string
-      // Expected format: "Song Title by Artist Name" or "Song Title"
-      let artist = 'Unknown Artist';
-      let title = trackTitle;
-      
-      if (trackTitle.includes(' by ')) {
-        const parts = trackTitle.split(' by ');
-        title = parts[0].trim();
-        artist = parts[1].trim();
-      } else if (trackTitle.includes(' - ')) {
-        const parts = trackTitle.split(' - ');
-        title = parts[0].trim();
-        artist = parts[1].trim();
-      }
-      
-      console.log(`🔍 Searching for: "${title}" by "${artist}"`);
-      
-      const previewUrl = await getDeezerPreviewUrl(title, artist);
-      
-      if (previewUrl) {
-        return [{
-          title: title,
-          artist: artist,
-          preview: previewUrl
-        }];
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('❌ Error searching track:', error);
-      return null;
-    }
-  }
-
-  private stopAllPageAudio(): void {
-    try {
-      // Find all audio elements on the page and stop them
-      const allAudioElements = document.querySelectorAll('audio');
-      allAudioElements.forEach(audio => {
-        try {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.volume = 0;
-          audio.src = '';
-          audio.load();
-        } catch (error) {
-          console.warn('Warning: Could not stop page audio element:', error);
-        }
-      });
-      console.log(`🛑 Stopped ${allAudioElements.length} audio elements found on page`);
-    } catch (error) {
-      console.warn('Warning: Could not stop all page audio:', error);
-    }
   }
 
   private fadeIn(audio: HTMLAudioElement, targetVolume: number): void {
@@ -663,6 +478,65 @@ class AudioManager {
       audio.load(); // Reset the audio element
     } catch (error) {
       console.warn('Warning: Could not fully cleanup audio:', error);
+    }
+  }
+
+  stop(): void {
+    console.log('🛑 Stopping all audio playback');
+    
+    // Stop current audio with fade
+    if (this.currentAudio) {
+      this.fadeOut(this.currentAudio);
+    }
+    
+    // Force stop all tracked audio instances
+    this.allAudioInstances.forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 0;
+        audio.src = '';
+        audio.load();
+      } catch (error) {
+        console.warn('Warning: Could not stop audio instance:', error);
+      }
+    });
+    
+    // Clear all references
+    this.allAudioInstances.clear();
+    this.currentAudio = null;
+    this.currentPreviewUrl = null;
+    this.currentCardId = null;
+    this.pendingPlayPromise = null;
+    
+    // Clear any pending fade timeout
+    if (this.fadeTimeout) {
+      clearTimeout(this.fadeTimeout);
+      this.fadeTimeout = null;
+    }
+
+    // Additional safety: stop ALL audio elements on the page
+    this.stopAllPageAudio();
+  }
+
+  private stopAllPageAudio(): void {
+    try {
+      // Find all audio elements on the page and stop them
+      const allAudioElements = document.querySelectorAll('audio');
+      allAudioElements.forEach(audio => {
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = 0;
+          audio.src = '';
+          audio.load();
+        } catch (error) {
+          console.warn('Warning: Could not stop page audio element:', error);
+        }
+      });
+      console.log(`🛑 Stopped ${allAudioElements.length} audio elements found on page`);
+    } catch (error) {
+      console.warn('Warning: Could not stop all page audio:', error);
     }
   }
 
