@@ -1,7 +1,7 @@
 <!-- Vibelines - Technical Documentation -->
 
 <div align="center">
-  <img src="public/Vibelines_logo.png" alt="Vibelines Logo" width="120" height="120">
+  <img src="../public/Vibelines_logo.png" alt="Vibelines Logo" width="120" height="120">
   <h1>Vibelines Technical Documentation</h1>
   <p><em>Your soundtrack, your emotions, your timeline.</em></p>
 </div>
