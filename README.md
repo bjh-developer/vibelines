@@ -27,10 +27,7 @@
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
-    <li><a href="#getting-started">Getting Started</a></li>
     <li><a href="#documentation">Documentation</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
   </ol>
 </details>
 
@@ -80,74 +77,17 @@ Discover patterns in your listening habits and see how your musical emotions evo
 
 
 
-<!-- GETTING STARTED -->
-## Getting Started
-
-### Quick Start
-```bash
-# Clone and install
-git clone https://github.com/bjh-developer/vibelines.git
-cd vibelines
-npm install
-
-# Configure environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys
-
-# Start development server
-npm run dev
-```
-
-### Prerequisites
-- Node.js 18+ and npm
-- Spotify Developer Account
-- Supabase Account
-
-For detailed setup instructions, see the [Development Guide](docs/DEVELOPMENT_GUIDE.md).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
 <!-- DOCUMENTATION -->
 ## Documentation
 
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[📚 Technical Documentation](TECHNICAL_DOCUMENTATION.md)** - Complete technical overview and architecture
-- **[🔧 Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Setup, development workflow, and deployment
-- **[📡 API Reference](docs/API_REFERENCE.md)** - Complete API documentation and integration guides  
 - **[🧩 Component Documentation](docs/COMPONENT_DOCUMENTATION.md)** - React component library and usage examples
 
 ### Quick Links
 - [Architecture Overview](TECHNICAL_DOCUMENTATION.md#architecture)
 - [Frontend Components](docs/COMPONENT_DOCUMENTATION.md#core-application-components)
-- [Backend API](docs/API_REFERENCE.md#music2emotion-api)
-- [Database Schema](docs/API_REFERENCE.md#supabase-database-api)
-- [Deployment Guide](docs/DEVELOPMENT_GUIDE.md#deployment-guide)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- CONTRIBUTING -->
-## Contributing
-
-We welcome contributions! Please see our [Development Guide](docs/DEVELOPMENT_GUIDE.md#contributing-guidelines) for details on:
-
-- Setting up the development environment
-- Code standards and conventions
-- Pull request process
-- Testing requirements
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- LICENSE -->
-## License
-
-This project is licensed under the MIT License. See the [Development Guide](docs/DEVELOPMENT_GUIDE.md) for more information about dependencies and external service terms.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
