@@ -278,7 +278,7 @@ Get information about the server device and model status.
 4. **Emotion Analysis**: Music2Emo model inference
 5. **Result Caching**: Store emotions in Supabase
 6. **Timeline Generation**: LLM creates narrative chapters
-*If the song exists in the Supabase database, the song will not go through emotion analysis again to improve efficiency.*
+7. *If the song exists in the Supabase database, the song will not go through emotion analysis again to improve efficiency.*
 
 ### Timeline Creation
 1. **Data Aggregation**: Group songs by time periods
