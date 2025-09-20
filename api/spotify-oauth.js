@@ -77,13 +77,12 @@ async function handleLogin(req, res) {
     
     const scope = 'user-library-read user-read-private user-read-email';
     
-    // Determine the correct redirect URI based on environment
-    const isLocal = req.headers.host?.includes('localhost') || req.headers.host?.includes('127.0.0.1');
-    const protocol = isLocal ? 'http' : 'https';
-    const redirectUri = `${protocol}://${req.headers.host}/api/spotify-oauth?action=callback`;
+    // Use the configured frontend URL for consistent redirect URI
+    const redirectUri = `${FRONTEND_URL}/api/spotify-oauth?action=callback`;
     
     console.log('=== OAUTH CONFIG ===');
     console.log('Client ID:', SPOTIFY_CLIENT_ID);
+    console.log('FRONTEND_URL:', FRONTEND_URL);
     console.log('Redirect URI:', redirectUri);
     console.log('State:', state);
     console.log('Scope:', scope);
