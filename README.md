@@ -53,7 +53,6 @@ Discover patterns in your listening habits and see how your musical emotions evo
 
 * [![React][React.js]][React-url]
 * [![TypeScript][Typescript]][Typescript-url]
-* [![TypeScript][TypeScript]][TypeScript-url]
 * [![Vite][Vite]][Vite-url]
 * [![Node.js][Node.js]][Nodejs-url]
 * [![React Router][ReactRouter]][ReactRouter-url]
