@@ -40,7 +40,7 @@ Vibelines transforms Spotify liked songs into an emotional journey by analysing 
 - **Backend**: FastAPI (Python), Music2Emo ML model
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Spotify OAuth 2.0
-- **Deployment**: Vercel (Frontend), AWS EC2 (Backend)
+- **Deployment**: Vercel (Frontend), Runpod (Backend)
 - **External APIs**: Spotify Web API, Deezer API, OpenRouter/Gemini
 
 ---
@@ -58,7 +58,7 @@ graph TB
     end
     
     subgraph "Backend Services"
-        E[Vercel API Proxy] --> F[AWS EC2 FastAPI]
+        F[Runpod FastAPI]
         F --> G[Music2Emo Model]
         F --> H[Deezer API]
     end
@@ -69,7 +69,7 @@ graph TB
         K[Supabase DB]
     end
     
-    A --> E
+    A --> F
     B --> J
     A --> K
     F --> I
@@ -87,7 +87,6 @@ sequenceDiagram
     participant U as User
     participant F as Frontend
     participant S as Spotify API
-    participant P as Proxy API
     participant M as Music2Emo API
     participant D as Deezer API
     participant L as LLM Service
@@ -100,16 +99,14 @@ sequenceDiagram
     S->>F: Songs Data
     
     loop For each song
-        F->>P: Analyse Song
-        P->>M: Forward Request
+        F->>M: Analyse Song
         M->>D: Get Preview URL
         D->>M: Audio Preview
         M->>M: Emotion Analysis
-        M->>P: Emotion Results
-        P->>F: Emotion Data
+        M->>F: Emotion Data
+        F->>DB: Store/Cache Results
     end
     
-    F->>DB: Store/Cache Results
     F->>L: Generate Timeline
     L->>F: Timeline Chapters
     F->>U: Display Interactive Timeline
@@ -262,23 +259,6 @@ Get information about the server device and model status.
     "cuda_available": Boolean,
     "mps_available": Boolean,
     "device_count": Integer,
-}
-```
-
-### Vercel API Proxy
-
-Located in `api/music-emotion.js`, handles:
-- CORS management for cross-origin requests
-- Request forwarding to AWS EC2 backend
-- API key management and security
-- Error handling and logging
-
-```javascript
-export default async function handler(req, res) {
-  // CORS configuration
-  // Target URL construction
-  // Request forwarding with headers
-  // Response handling and error management
 }
 ```
 
