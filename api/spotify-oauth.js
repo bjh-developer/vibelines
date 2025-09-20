@@ -1,10 +1,6 @@
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-
-// Polyfill fetch for Node.js environment if needed
-if (typeof fetch === 'undefined') {
-  global.fetch = require('node-fetch');
-}
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import fetch from 'node-fetch';
 
 // Environment variables
 const SPOTIFY_CLIENT_ID = process.env.VITE_SPOTIFY_CLIENT_ID;
@@ -20,7 +16,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || (
 // In-memory session store (use Redis in production)
 const userSessions = new Map();
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Add error logging
   console.log('Function invoked:', req.method, req.url, req.query);
   

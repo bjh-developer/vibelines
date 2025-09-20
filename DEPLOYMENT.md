@@ -68,6 +68,22 @@ For each variable, set the target environments:
    - After login, should redirect back to your app
    - Should see user's liked songs loading
 
+## 🏠 Local Development Notes
+
+**Important:** The serverless function (`/api/spotify-oauth`) will NOT work with `npm run dev` because Vite doesn't execute serverless functions.
+
+### For Local Testing:
+1. **Test on Vercel Preview**: Push your code and test on the preview deployment
+2. **Use Vercel CLI** (optional):
+   ```bash
+   npm install -g vercel
+   vercel dev
+   ```
+   This runs a local Vercel environment that supports serverless functions.
+
+### Local Development Workaround:
+For local development, you can temporarily modify your frontend to use direct Spotify OAuth (without the backend) by updating the `initiateSpotifyAuth` function to use the old direct approach.
+
 ## 🐛 Troubleshooting
 
 ### If you see "No routes matched location /api/spotify-oauth":
@@ -83,6 +99,17 @@ For each variable, set the target environments:
 2. Verify all environment variables are set correctly
 3. Check that all required dependencies are installed
 4. Test the function endpoint directly first before testing the full flow
+
+### If you get "require is not defined in ES module scope":
+1. Ensure your serverless function uses ES module syntax (import/export)
+2. Check that your package.json has `"type": "module"`
+3. Use `import` statements instead of `require()`
+4. Use `export default` instead of `module.exports`
+
+### If you see source code instead of function execution locally:
+1. This is expected behavior with `npm run dev` (Vite doesn't run serverless functions)
+2. Test on Vercel preview deployment instead
+3. Or use `vercel dev` for local serverless function testing
 
 ### If you get "Function Runtimes must have a valid version" error:
 1. Remove explicit runtime configuration from `vercel.json`
