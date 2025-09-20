@@ -51,7 +51,7 @@ export const analyzeSongMoods = async (songTitle: string, artistName: string): P
     const encodedTitle = encodeURIComponent(safeSongTitle);
     const encodedArtist = encodeURIComponent(safeArtistName);
     const API_URL = 'https://ktnf72fqnabpy2-8000.proxy.runpod.net';
-    const apiKey = process.env.M2E_API_KEY;
+    const apiKey = import.meta.env.VITE_M2E_API_KEY;
     let targetUrl;
     targetUrl = `${API_URL}/analyse&predict/${encodedTitle}/${encodedArtist}`;
 
