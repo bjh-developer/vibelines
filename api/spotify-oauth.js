@@ -67,7 +67,10 @@ export default async function handler(req, res) {
 // Initiate Spotify OAuth
 async function handleLogin(req, res) {
   try {
-    console.log('Handling login request');
+    console.log('=== LOGIN DEBUG INFO ===');
+    console.log('Host header:', req.headers.host);
+    console.log('User-Agent:', req.headers['user-agent']);
+    console.log('=== END LOGIN DEBUG INFO ===');
     
     const state = crypto.randomBytes(16).toString('hex');
     const codeVerifier = generateRandomString(128);
@@ -80,7 +83,12 @@ async function handleLogin(req, res) {
     const protocol = isLocal ? 'http' : 'https';
     const redirectUri = `${protocol}://${req.headers.host}/api/spotify-oauth?action=callback`;
     
+    console.log('=== OAUTH CONFIG ===');
+    console.log('Client ID:', SPOTIFY_CLIENT_ID);
     console.log('Redirect URI:', redirectUri);
+    console.log('State:', state);
+    console.log('Scope:', scope);
+    console.log('=== END OAUTH CONFIG ===');
     
     const params = new URLSearchParams({
       response_type: 'code',
@@ -99,7 +107,7 @@ async function handleLogin(req, res) {
     });
     
     const authUrl = `https://accounts.spotify.com/authorize?${params}`;
-    console.log('Redirecting to:', authUrl);
+    console.log('Final auth URL:', authUrl);
     
     return res.redirect(authUrl);
   } catch (error) {
@@ -110,14 +118,34 @@ async function handleLogin(req, res) {
 
 // Handle Spotify OAuth callback
 async function handleCallback(req, res) {
+  console.log('=== CALLBACK DEBUG INFO ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Query params:', req.query);
+  console.log('Query keys:', Object.keys(req.query));
+  console.log('Raw query string:', req.url?.split('?')[1]);
+  console.log('=== END CALLBACK DEBUG INFO ===');
+  
   const { code, state, error } = req.query;
   
   if (error) {
+    console.log('Spotify returned error:', error);
     return res.redirect(`${FRONTEND_URL}?error=${error}`);
   }
   
   if (!code || !state) {
-    return res.redirect(`${FRONTEND_URL}?error=missing_parameters`);
+    console.log('Missing parameters - code:', !!code, 'state:', !!state);
+    console.log('Full query object:', JSON.stringify(req.query, null, 2));
+    console.log('Expected parameters: code, state');
+    console.log('Received parameters:', Object.keys(req.query));
+    
+    // Let's see if there are any parameters at all
+    if (Object.keys(req.query).length === 0) {
+      console.log('⚠️  NO QUERY PARAMETERS RECEIVED AT ALL');
+      console.log('This suggests Spotify is not sending the OAuth response to this URL');
+    }
+    
+    return res.redirect(`${FRONTEND_URL}?error=missing_parameters&debug=code:${!!code},state:${!!state},keys:${Object.keys(req.query).join(',')}`);
   }
 
   // Retrieve stored session data

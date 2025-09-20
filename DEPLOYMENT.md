@@ -23,9 +23,15 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### 2. Update Spotify App Settings
 In your Spotify Developer Dashboard, add these Redirect URIs:
-- `http://localhost:3000/api/spotify-oauth?action=callback` (for development)
+
+**⚠️ IMPORTANT: Remove any existing `/callback` URIs and only use these:**
+- `http://localhost:3000/api/spotify-oauth?action=callback` (for development)  
 - `https://vibelines.vercel.app/api/spotify-oauth?action=callback` (for production)
 - `https://your-preview-url.vercel.app/api/spotify-oauth?action=callback` (for preview deployments)
+
+**❌ DO NOT USE these URIs (they will cause "Missing code or state parameter" errors):**
+- `https://vibelines.vercel.app/callback`
+- `http://localhost:3000/callback`
 
 ## 🚀 Vercel Environment Variables
 
@@ -105,6 +111,12 @@ For local development, you can temporarily modify your frontend to use direct Sp
 2. Check that your package.json has `"type": "module"`
 3. Use `import` statements instead of `require()`
 4. Use `export default` instead of `module.exports`
+
+### If you get "Missing code or state parameter" error:
+1. **Check Spotify Redirect URIs**: Ensure you're using `/api/spotify-oauth?action=callback` NOT `/callback`
+2. **Remove old redirect URIs**: Delete any `/callback` URIs from Spotify Developer Dashboard
+3. **Check browser network tab**: Verify which redirect_uri is being sent to Spotify
+4. **Check Vercel function logs**: See if the callback is reaching your serverless function
 
 ### If you see source code instead of function execution locally:
 1. This is expected behavior with `npm run dev` (Vite doesn't run serverless functions)
