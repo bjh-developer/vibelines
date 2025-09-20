@@ -9,8 +9,7 @@ const SpotifyCallback: React.FC = () => {
   useEffect(() => {
     const processCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const state = urlParams.get('state');
+      const sessionToken = urlParams.get('session_token');
       const error = urlParams.get('error');
 
       if (error) {
@@ -20,15 +19,15 @@ const SpotifyCallback: React.FC = () => {
         return;
       }
 
-      if (!code || !state) {
-        console.error('Missing code or state parameter');
+      if (!sessionToken) {
+        console.error('Missing session token parameter');
         setStatus('error');
         setTimeout(() => navigate('/'), 3000);
         return;
       }
 
       try {
-        const success = await handleSpotifyCallback(code, state);
+        const success = await handleSpotifyCallback(sessionToken);
         if (success) {
           setStatus('success');
           setTimeout(() => navigate('/loading'), 2000);

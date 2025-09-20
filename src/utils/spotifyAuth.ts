@@ -1,41 +1,8 @@
 // Spotify OAuth and API utilities
 
-// Spotify App Configuration
-const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || 'your_spotify_client_id';
-const REDIRECT_URI = import.meta.env.VITE_SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:5173/callback';
-const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
-const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
-const API_BASE_URL = 'https://api.spotify.com/v1';
-
-// Scopes needed for accessing liked songs
-const SCOPES = [
-  'user-library-read',
-  'user-read-private',
-  'user-read-email'
-].join(' ');
-
-// Generate random string for state parameter
-const generateRandomString = (length: number): string => {
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const values = crypto.getRandomValues(new Uint8Array(length));
-  return values.reduce((acc, x) => acc + possible[x % possible.length], '');
-};
-
-// Generate code verifier for PKCE
-const generateCodeVerifier = (): string => {
-  return generateRandomString(128);
-};
-
-// Generate code challenge for PKCE
-const generateCodeChallenge = async (codeVerifier: string): Promise<string> => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(codeVerifier);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
-};
+// Backend API Configuration
+const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
+const API_BASE_URL = `${BACKEND_BASE_URL}/api`;
 
 // Store auth data in session storage
 const storeAuthData = (key: string, value: string): void => {
@@ -50,6 +17,34 @@ const getAuthData = (key: string): string | null => {
 // Remove auth data from session storage
 const removeAuthData = (key: string): void => {
   sessionStorage.removeItem(`spotify_${key}`);
+};
+
+// Start the OAuth flow - now redirects to backend
+export const initiateSpotifyAuth = async (): Promise<void> => {
+  console.log('🔐 Initiating backend-based Spotify OAuth...');
+  
+  // Redirect to backend OAuth endpoint
+  const backendAuthUrl = `${API_BASE_URL}/spotify-oauth?action=login`;
+  window.location.href = backendAuthUrl;
+};
+
+// Handle the callback from backend OAuth
+export const handleSpotifyCallback = async (sessionToken: string): Promise<boolean> => {
+  try {
+    console.log('🔐 Processing session token from backend...');
+    
+    // Store the session token
+    storeAuthData('session_token', sessionToken);
+    
+    // Set expiry (24 hours from now)
+    const expiresAt = Date.now() + (24 * 60 * 60 * 1000);
+    storeAuthData('expires_at', expiresAt.toString());
+    
+    return true;
+  } catch (error) {
+    console.error('Error processing session token:', error);
+    return false;
+  }
 };
 
 // Interface for Spotify API responses
@@ -99,204 +94,45 @@ export interface SpotifyUser {
   }>;
 }
 
-// Start the OAuth flow
-export const initiateSpotifyAuth = async (): Promise<void> => {
-  // Check if CLIENT_ID is configured
-  if (CLIENT_ID === 'your_spotify_client_id') {
-    console.error('Spotify Client ID not configured. Please set VITE_SPOTIFY_CLIENT_ID in your .env file');
-    alert('Spotify Client ID not configured. Please check your .env file.');
-    return;
-  }
-
-  const codeVerifier = generateCodeVerifier();
-  const codeChallenge = await generateCodeChallenge(codeVerifier);
-  const state = generateRandomString(16);
-
-  // Store code verifier and state for later use
-  storeAuthData('code_verifier', codeVerifier);
-  storeAuthData('state', state);
-
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    response_type: 'code',
-    redirect_uri: REDIRECT_URI,
-    code_challenge_method: 'S256',
-    code_challenge: codeChallenge,
-    state: state,
-    scope: SCOPES,
-  });
-
-  console.log('Redirecting to Spotify auth with redirect URI:', REDIRECT_URI);
-  
-  // Redirect to Spotify authorization
-  window.location.href = `${AUTH_ENDPOINT}?${params.toString()}`;
-};
-
-// Handle the callback from Spotify
-export const handleSpotifyCallback = async (code: string, state: string): Promise<boolean> => {
-  const storedState = getAuthData('state');
-  const codeVerifier = getAuthData('code_verifier');
-
-  if (state !== storedState) {
-    console.error('State mismatch');
-    return false;
-  }
-
-  if (!codeVerifier) {
-    console.error('Code verifier not found');
-    return false;
-  }
-
-  try {
-    console.log('🔐 Making token exchange request...', {
-      client_id: CLIENT_ID,
-      grant_type: 'authorization_code',
-      redirect_uri: REDIRECT_URI,
-      has_code: !!code,
-      has_code_verifier: !!codeVerifier
-    });
-
-    const response = await fetch(TOKEN_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        client_id: CLIENT_ID,
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: REDIRECT_URI,
-        code_verifier: codeVerifier,
-      }),
-    });
-
-    console.log('🔐 Token exchange response:', response.status, response.statusText);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('🔐 Token exchange error details:', errorText);
-      throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    
-    // Store tokens
-    storeAuthData('access_token', data.access_token);
-    storeAuthData('refresh_token', data.refresh_token);
-    storeAuthData('expires_at', (Date.now() + data.expires_in * 1000).toString());
-
-    // Clean up temporary storage
-    removeAuthData('code_verifier');
-    removeAuthData('state');
-
-    return true;
-  } catch (error) {
-    console.error('Error exchanging code for tokens:', error);
-    return false;
-  }
-};
-
 // Check if user is authenticated
 export const isAuthenticated = (): boolean => {
-  const accessToken = getAuthData('access_token');
+  const sessionToken = getAuthData('session_token');
   const expiresAt = getAuthData('expires_at');
   
-  if (!accessToken || !expiresAt) {
+  if (!sessionToken || !expiresAt) {
     return false;
   }
 
   return Date.now() < parseInt(expiresAt);
 };
 
-// Get access token
-export const getAccessToken = (): string | null => {
+// Get session token
+export const getSessionToken = (): string | null => {
   if (!isAuthenticated()) {
     return null;
   }
-  return getAuthData('access_token');
+  return getAuthData('session_token');
 };
 
-// Refresh access token
-export const refreshAccessToken = async (): Promise<boolean> => {
-  const refreshToken = getAuthData('refresh_token');
-  
-  if (!refreshToken) {
-    return false;
-  }
-
-  try {
-    const response = await fetch(TOKEN_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        client_id: CLIENT_ID,
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Token refresh failed');
-    }
-
-    const data = await response.json();
-    
-    // Update stored tokens
-    storeAuthData('access_token', data.access_token);
-    storeAuthData('expires_at', (Date.now() + data.expires_in * 1000).toString());
-    
-    // Update refresh token if provided
-    if (data.refresh_token) {
-      storeAuthData('refresh_token', data.refresh_token);
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error refreshing token:', error);
-    return false;
-  }
-};
-
-// Make authenticated API request
+// Make authenticated API request to backend
 const makeSpotifyRequest = async (endpoint: string): Promise<any> => {
-  let accessToken = getAccessToken();
+  const sessionToken = getSessionToken();
   
-  if (!accessToken) {
-    // Try to refresh token
-    const refreshed = await refreshAccessToken();
-    if (!refreshed) {
-      throw new Error('Authentication required');
-    }
-    accessToken = getAccessToken();
+  if (!sessionToken) {
+    throw new Error('Authentication required');
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}/spotify-oauth?action=${endpoint}`, {
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${sessionToken}`,
     },
   });
 
   if (response.status === 401) {
-    // Token expired, try to refresh
-    const refreshed = await refreshAccessToken();
-    if (refreshed) {
-      accessToken = getAccessToken();
-      const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-      
-      if (!retryResponse.ok) {
-        throw new Error(`API request failed: ${retryResponse.status}`);
-      }
-      
-      return retryResponse.json();
-    } else {
-      throw new Error('Authentication required');
-    }
+    // Session expired, redirect to login
+    removeAuthData('session_token');
+    removeAuthData('expires_at');
+    throw new Error('Session expired');
   }
 
   if (!response.ok) {
@@ -308,12 +144,35 @@ const makeSpotifyRequest = async (endpoint: string): Promise<any> => {
 
 // Get user profile
 export const getCurrentUser = async (): Promise<SpotifyUser> => {
-  return makeSpotifyRequest('/me');
+  return makeSpotifyRequest('user');
 };
 
-// Get user's liked songs
+// Get user's liked songs using backend/NocodeAPI
 export const getLikedSongs = async (limit: number = 50, offset: number = 0): Promise<SpotifyLikedTracksResponse> => {
-  return makeSpotifyRequest(`/me/tracks?limit=${limit}&offset=${offset}`);
+  const sessionToken = getSessionToken();
+  
+  if (!sessionToken) {
+    throw new Error('Authentication required');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/spotify-oauth?action=tracks&limit=${limit}&offset=${offset}`, {
+    headers: {
+      'Authorization': `Bearer ${sessionToken}`,
+    },
+  });
+
+  if (response.status === 401) {
+    // Session expired, redirect to login
+    removeAuthData('session_token');
+    removeAuthData('expires_at');
+    throw new Error('Session expired');
+  }
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status}`);
+  }
+
+  return response.json();
 };
 
 
@@ -358,21 +217,12 @@ export const getAllLikedSongs = async (): Promise<SpotifyTrack[]> => {
   }
 };
 
-// Search for a track and get album cover
+// Search for a track and get album cover - Note: This may need backend implementation for search endpoint
 export const searchTrackAlbumCover = async (trackName: string, artistName: string): Promise<string | null> => {
   try {
-    const query = `track:"${trackName}" artist:"${artistName}"`;
-    const encodedQuery = encodeURIComponent(query);
-    const endpoint = `/search?q=${encodedQuery}&type=track&limit=1`;
-    
-    const response = await makeSpotifyRequest(endpoint);
-    
-    if (response.tracks?.items?.length > 0) {
-      const track = response.tracks.items[0];
-      const albumCover = track.album?.images?.[0]?.url;
-      return albumCover || null;
-    }
-    
+    // For now, return null as search functionality would need additional backend endpoint
+    // This can be implemented later if needed
+    console.log('Track search not implemented in backend yet:', trackName, artistName);
     return null;
   } catch (error) {
     console.error('Error searching for track:', error);

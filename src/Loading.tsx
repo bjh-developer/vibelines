@@ -629,13 +629,18 @@ export default function Loading() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-    const state = urlParams.get("state");
+    const sessionToken = urlParams.get("session_token");
+    const error = urlParams.get("error");
 
-    if (code && state) {
-      // Handle callback from Spotify
+    if (error) {
+      setErrorState(`Authentication failed: ${error}`);
+      return;
+    }
+
+    if (sessionToken) {
+      // Handle callback from backend OAuth with session token
       updateMessage(LOADING_MESSAGES.AUTHENTICATING);
-      handleSpotifyCallback(code, state).then((success) => {
+      handleSpotifyCallback(sessionToken).then((success) => {
         if (success) {
           // Clean up URL
           window.history.replaceState(
