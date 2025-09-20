@@ -1,7 +1,5 @@
 // Utility for calling the music emotion analysis API through Vercel proxy
 
-import { Target } from "lucide-react";
-
 interface MoodPrediction {
   predicted_moods: string[] | null;
 }
