@@ -76,6 +76,11 @@ For each variable, set the target environments:
 3. Verify the `spotify-oauth.js` file exists in `/api/` folder
 4. Check Vercel Functions tab in dashboard
 
+### If you get "Function Runtimes must have a valid version" error:
+1. Remove explicit runtime configuration from `vercel.json`
+2. Let Vercel auto-detect Node.js functions
+3. Ensure your `vercel.json` only has the rewrite rules
+
 ## 🚨 Security Notes
 
 - Never commit `.env` files to git
