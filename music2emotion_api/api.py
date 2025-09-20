@@ -246,6 +246,10 @@ async def check_api_key(request: Request, call_next):
     Raises:
         HTTPException: If API key is missing or invalid (403 Forbidden)
     """
+    # Always allow OPTIONS (CORS preflight)
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    
     # Public endpoints that don't require API key
     public_endpoints = ["/", "/device-info"]
     
