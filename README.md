@@ -55,7 +55,6 @@ This section should list any major frameworks/libraries used to bootstrap your p
 
 * [![React][React.js]][React-url]
 * [![TypeScript][Typescript]][Typescript-url]
-* * [![React][React.js]][React-url]
 * [![TypeScript][TypeScript]][TypeScript-url]
 * [![Vite][Vite]][Vite-url]
 * [![Node.js][Node.js]][Nodejs-url]
