@@ -83,7 +83,7 @@ Discover patterns in your listening habits and see how your musical emotions evo
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[📚 Technical Documentation](docs/TECHNICAL_DOCUMENTATION.md)** - Complete technical overview and architecture
-  - [Online link to technical documentation](https://docsify-this.net/?basePath=https://raw.githubusercontent.com/bjh-developer/vibelines/main/docs&homepage=TECHNICAL_DOCUMENTATION.md&sidebar=true#/?id=table-of-contents)
+  - [Online link to technical documentation](https://docsify-this.net/?basePath=https://raw.githubusercontent.com/bjh-developer/vibelines/main/docs&homepage=TECHNICAL_DOCUMENTATION.md&sidebar=true#/)
 - **[🧩 Component Documentation](docs/COMPONENT_DOCUMENTATION.md)** - React component library and usage examples
 
 ### Quick Links
