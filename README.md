@@ -62,7 +62,6 @@ Discover patterns in your listening habits and see how your musical emotions evo
 * [![FastAPI][FastAPI]][FastAPI-url]
 * [![Supabase][Supabase]][Supabase-url]
 * [![Vercel][Vercel]][Vercel-url]
-* [![AWS EC2][AWS]][AWS-url]
 * [![Spotify][Spotify]][Spotify-url]
 * [![Deezer][Deezer]][Deezer-url]
 * [![ESLint][ESLint]][ESLint-url]
@@ -70,6 +69,7 @@ Discover patterns in your listening habits and see how your musical emotions evo
 * [![PostCSS][PostCSS]][PostCSS-url]
 * [![Python][Python]][Python-url]
 * [![pydub][pydub]][pydub-url]
+* [Runpod](https://www.runpod.io/)
 * [Google Gemini Flash](https://deepmind.google/models/gemini/flash-lite/)
 * [Music2Emo](https://huggingface.co/amaai-lab/music2emo)
 
@@ -116,8 +116,6 @@ Comprehensive documentation is available in the `docs/` directory:
 [Supabase-url]: https://supabase.com/
 [Vercel]: https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white
 [Vercel-url]: https://vercel.com/
-[AWS]: https://img.shields.io/badge/AWS%20EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white
-[AWS-url]: https://aws.amazon.com/ec2/
 [Spotify]: https://img.shields.io/badge/Spotify-1DB954?style=for-the-badge&logo=spotify&logoColor=white
 [Spotify-url]: https://developer.spotify.com/documentation/web-api
 [Deezer]: https://img.shields.io/badge/Deezer-FEAA2D?style=for-the-badge&logo=deezer&logoColor=white
