@@ -1,13 +1,23 @@
+/**
+ * MoodTimeline component - displays the user's musical emotional journey
+ * Features swipeable cards, audio playback, and screenshot functionality
+ */
+
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "react-router-dom";
+
+// Components
 import Stack from "./components/Stack";
 import ChapterCard from "./components/ChapterCard";
-import { useLocation } from "react-router-dom";
-import { useScreenSize, calculateCardDimensions } from "./hooks/useScreenSize";
-import { useMemo, useState, useCallback, useEffect } from "react";
 import Aurora from "./components/AuroraBG";
-import { useScreenshot } from "./hooks/useScreenshot";
 import BubbleMenu from "./components/BubbleMenu";
+
+// Hooks and utilities
+import { useScreenSize, calculateCardDimensions } from "./hooks/useScreenSize";
+import { useScreenshot } from "./hooks/useScreenshot";
 import { audioManager } from "./utils/deezerApi";
 
+// Types and Interfaces
 interface TimelineData {
   Chapters: { [key: string]: string };
   Phases: { [key: string]: string };
@@ -15,70 +25,140 @@ interface TimelineData {
   Soundtracks: { [key: string]: string };
 }
 
-export default function MoodTimeline() {
-  const items = [
-    {
-      label: "home",
-      href: "/",
-      ariaLabel: "Home",
-      rotation: -8,
-      hoverStyles: { bgColor: "#3b82f6", textColor: "#ffffff" },
-    },
-    {
-      label: "about",
-      href: "/about",
-      ariaLabel: "About",
-      rotation: 8,
-      hoverStyles: { bgColor: "#10b981", textColor: "#ffffff" },
-    },
-    {
-      label: "faq",
-      href: "/faq",
-      ariaLabel: "FAQ",
-      rotation: 8,
-      hoverStyles: { bgColor: "#0f0bf5ff", textColor: "#ffffff" },
-    },
-    {
-      label: "privacy policy",
-      href: "/privacy-policy",
-      ariaLabel: "Privacy Policy",
-      rotation: 8,
-      hoverStyles: { bgColor: "#900bf5ff", textColor: "#ffffff" },
-    },
-    {
-      label: "contact me",
-      href: "/contact",
-      ariaLabel: "Contact Me",
-      rotation: 8,
-      hoverStyles: { bgColor: "#6744f2ff", textColor: "#ffffff" },
-    },
-  ];
+interface CardData {
+  id: number;
+  chapter: string;
+  phase: string;
+  content: string;
+  soundtrack: string;
+}
 
-  const location = useLocation();
-  const { timeline } = location.state || { timeline: {} };
-  const screenSize = useScreenSize();
-  const [frontCardId, setFrontCardId] = useState<number | null>(null);
+interface BubbleMenuItem {
+  label: string;
+  href: string;
+  ariaLabel: string;
+  rotation: number;
+  hoverStyles: {
+    bgColor: string;
+    textColor: string;
+  };
+}
 
-  // Screenshot hook
-  const { isCapturing, takeScreenshot } = useScreenshot({
-    targetElementId: "vibeline-container",
-  });
+// Constants
+const AURORA_CONFIG = {
+  colorStops: ["#7CFF67", "#B19EEF", "#5227FF"] as string[],
+  blend: 0.5,
+  amplitude: 0.25,
+  speed: 1,
+};
 
-  // Enable scrolling on mount
+const BUBBLE_MENU_CONFIG = {
+  menuAriaLabel: "Toggle navigation",
+  menuBg: "#ffffff",
+  menuContentColor: "#111111",
+  useFixedPosition: true,
+  animationEase: "back.out(1.5)",
+  animationDuration: 0.5,
+  staggerDelay: 0.12,
+} as const;
+
+const NAVIGATION_ITEMS: BubbleMenuItem[] = [
+  {
+    label: "home",
+    href: "/",
+    ariaLabel: "Home",
+    rotation: -8,
+    hoverStyles: { bgColor: "#3b82f6", textColor: "#ffffff" },
+  },
+  {
+    label: "about",
+    href: "/about",
+    ariaLabel: "About",
+    rotation: 8,
+    hoverStyles: { bgColor: "#10b981", textColor: "#ffffff" },
+  },
+  {
+    label: "faq",
+    href: "/faq",
+    ariaLabel: "FAQ",
+    rotation: 8,
+    hoverStyles: { bgColor: "#0f0bf5ff", textColor: "#ffffff" },
+  },
+  {
+    label: "privacy policy",
+    href: "/privacy-policy",
+    ariaLabel: "Privacy Policy",
+    rotation: 8,
+    hoverStyles: { bgColor: "#900bf5ff", textColor: "#ffffff" },
+  },
+  {
+    label: "contact me",
+    href: "/contact",
+    ariaLabel: "Contact Me",
+    rotation: 8,
+    hoverStyles: { bgColor: "#6744f2ff", textColor: "#ffffff" },
+  },
+];
+
+const UI_CONFIG = {
+  screenshot: {
+    buttonText: {
+      capturing: "📸 Capturing...",
+      default: "📸 Share Vibeline",
+    },
+    containerElementId: "vibeline-container",
+  },
+  swipeInstructions: {
+    soundEmoji: "🎧",
+    instructionText: "Turn on sound!",
+  },
+  buyMeACoffee: {
+    url: "https://www.buymeacoffee.com/bjh21",
+    imageUrl: "https://cdn.buymeacoffee.com/buttons/v2/default-green.png",
+  },
+};
+
+/**
+ * Hook for managing timeline data and card processing
+ */
+const useTimelineData = (timeline: any) => {
+  const cardsData: CardData[] = useMemo(() => {
+    if (!timeline || typeof timeline !== "object") {
+      return [];
+    }
+
+    const timelineData = timeline as TimelineData;
+    const { Chapters, Phases, Contents, Soundtracks } = timelineData;
+
+    if (!Chapters || !Phases || !Contents || !Soundtracks) {
+      return [];
+    }
+
+    const cards = Object.keys(Chapters)
+      .map((key): CardData => {
+        const cardId = parseInt(key);
+        return {
+          id: cardId,
+          chapter: Chapters[key],
+          phase: Phases[key],
+          content: Contents[key],
+          soundtrack: Soundtracks[key],
+        };
+      })
+      .sort((a, b) => a.id - b.id); // Sort chronologically by ID
+
+    return cards;
+  }, [timeline]);
+
+  return { cardsData };
+};
+
+/**
+ * Hook for managing audio playback and cleanup
+ */
+const useAudioManager = () => {
   useEffect(() => {
-    document.body.style.overflow = "auto";
-    document.documentElement.style.overflow = "auto";
-
-    return () => {
-      // Cleanup if needed
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, []);
-
-  // Stop audio when leaving the page
-  useEffect(() => {
-    // Also stop audio immediately when navigating
+    // Stop audio when leaving the page
     const handleBeforeUnload = () => {
       console.log("🎵 Page unloading - stopping audio");
       audioManager.stop();
@@ -104,41 +184,13 @@ export default function MoodTimeline() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+};
 
-  // Calculate optimal card dimensions based on screen size
-  const cardDimensions = useMemo(() => {
-    return calculateCardDimensions(screenSize.width, screenSize.height);
-  }, [screenSize]);
-
-  // Process timeline data into cards - adapt to Stack's expected format
-  const cardsData = useMemo(() => {
-    if (!timeline || typeof timeline !== "object") {
-      return [];
-    }
-
-    const timelineData = timeline as TimelineData;
-    const { Chapters, Phases, Contents, Soundtracks } = timelineData;
-
-    if (!Chapters || !Phases || !Contents || !Soundtracks) {
-      return [];
-    }
-
-    const cards = Object.keys(Chapters)
-      .map((key) => {
-        const cardId = parseInt(key);
-        return {
-          id: cardId,
-          // Store the card data instead of rendered component
-          chapter: Chapters[key],
-          phase: Phases[key],
-          content: Contents[key],
-          soundtrack: Soundtracks[key],
-        };
-      })
-      .sort((a, b) => a.id - b.id); // Sort chronologically by ID
-
-    return cards;
-  }, [timeline]);
+/**
+ * Hook for managing card state and interactions
+ */
+const useCardManager = (cardsData: CardData[]) => {
+  const [frontCardId, setFrontCardId] = useState<number | null>(null);
 
   // Set the initial front card ID
   useEffect(() => {
@@ -171,6 +223,120 @@ export default function MoodTimeline() {
     [frontCardId]
   );
 
+  return {
+    frontCardId,
+    handleCardOrderChange,
+  };
+};
+
+/**
+ * Header component with title and instructions
+ */
+interface HeaderProps {
+  frontCardId: number | null;
+  totalCards: number;
+  isCapturing: boolean;
+  onTakeScreenshot: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({
+  frontCardId,
+  totalCards,
+  isCapturing,
+  onTakeScreenshot,
+}) => (
+  <div className="text-center mb-6 md:mb-8">
+    <h1 className="text-white text-2xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4">
+      Your Vibeline
+    </h1>
+    <p className="text-gray-400 text-sm md:text-base lg:text-lg leading-relaxed">
+      Swipe through your musical chapters ({frontCardId} / {totalCards}).
+      <br />
+      {UI_CONFIG.swipeInstructions.soundEmoji}{" "}
+      {UI_CONFIG.swipeInstructions.instructionText}
+    </p>
+
+    {/* Share Screenshot Button */}
+    <button
+      data-html2canvas-ignore
+      onClick={onTakeScreenshot}
+      disabled={isCapturing}
+      className={`mt-4 px-6 py-2 md:px-8 md:py-3 rounded-full font-semibold transition-all duration-300 text-sm md:text-base ${
+        isCapturing
+          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+          : "bg-gradient-to-r from-[#7CFF67] to-[#5227FF] text-white hover:scale-105 shadow-lg"
+      }`}
+    >
+      {isCapturing
+        ? UI_CONFIG.screenshot.buttonText.capturing
+        : UI_CONFIG.screenshot.buttonText.default}
+    </button>
+  </div>
+);
+
+/**
+ * Support footer component
+ */
+const SupportFooter: React.FC = () => (
+  <div data-html2canvas-ignore className="mb-10">
+    <a href={UI_CONFIG.buyMeACoffee.url} target="_blank">
+      <img
+        src={UI_CONFIG.buyMeACoffee.imageUrl}
+        alt="Buy Me A Coffee"
+        className="h-10 w-auto"
+      />
+    </a>
+  </div>
+);
+
+/**
+ * MoodTimeline Component
+ *
+ * Interactive timeline display component that renders swipeable cards representing
+ * musical chapters with mood analysis. Features audio playback, screenshot capture,
+ * and responsive design optimized for mobile and desktop.
+ *
+ * Key Features:
+ * - Swipeable card interface using Stack component
+ * - Automatic audio management with cleanup
+ * - Screenshot capture functionality
+ * - Responsive card dimensions
+ * - Navigation menu integration
+ *
+ * @returns {JSX.Element} The complete MoodTimeline interface
+ */
+export default function MoodTimeline(): React.ReactElement {
+  const location = useLocation();
+  const { timeline } = location.state || { timeline: {} };
+  const screenSize = useScreenSize();
+
+  // Custom hooks
+  const { cardsData } = useTimelineData(timeline);
+  const { frontCardId, handleCardOrderChange } = useCardManager(cardsData);
+  useAudioManager();
+
+  // Screenshot hook
+  const { isCapturing, takeScreenshot } = useScreenshot({
+    targetElementId: UI_CONFIG.screenshot.containerElementId,
+  });
+
+  // Enable scrolling on mount
+  useEffect(() => {
+    document.body.style.overflow = "auto";
+    document.documentElement.style.overflow = "auto";
+
+    return () => {
+      // Cleanup if needed
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+
+  // Calculate optimal card dimensions based on screen size
+  const cardDimensions = useMemo(() => {
+    return calculateCardDimensions(screenSize.width, screenSize.height);
+  }, [screenSize]);
+
   return (
     <div
       // id="vibeline-container"
@@ -178,21 +344,21 @@ export default function MoodTimeline() {
       style={{ minHeight: "100vh" }}
     >
       <BubbleMenu
-        items={items}
-        menuAriaLabel="Toggle navigation"
-        menuBg="#ffffff"
-        menuContentColor="#111111"
-        useFixedPosition={true}
-        animationEase="back.out(1.5)"
-        animationDuration={0.5}
-        staggerDelay={0.12}
+        items={NAVIGATION_ITEMS}
+        menuAriaLabel={BUBBLE_MENU_CONFIG.menuAriaLabel}
+        menuBg={BUBBLE_MENU_CONFIG.menuBg}
+        menuContentColor={BUBBLE_MENU_CONFIG.menuContentColor}
+        useFixedPosition={BUBBLE_MENU_CONFIG.useFixedPosition}
+        animationEase={BUBBLE_MENU_CONFIG.animationEase}
+        animationDuration={BUBBLE_MENU_CONFIG.animationDuration}
+        staggerDelay={BUBBLE_MENU_CONFIG.staggerDelay}
       />
       <div className="fixed inset-0 z-0">
         <Aurora
-          colorStops={["#7CFF67", "#B19EEF", "#5227FF"]}
-          blend={0.5}
-          amplitude={0.25}
-          speed={1}
+          colorStops={AURORA_CONFIG.colorStops}
+          blend={AURORA_CONFIG.blend}
+          amplitude={AURORA_CONFIG.amplitude}
+          speed={AURORA_CONFIG.speed}
         />
       </div>
 
@@ -203,29 +369,12 @@ export default function MoodTimeline() {
       >
         <div className="flex flex-col items-center justify-start min-h-[calc(100vh-6rem)] md:min-h-[calc(100vh-7rem)]">
           <div className="w-full max-w-6xl flex flex-col items-center py-4 md:py-8">
-            <div className="text-center mb-6 md:mb-8">
-              <h1 className="text-white text-2xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4">
-                Your Vibeline
-              </h1>
-              <p className="text-gray-400 text-sm md:text-base lg:text-lg leading-relaxed">
-                Swipe through your musical chapters ({frontCardId} /{" "}
-                {cardsData.length}).<br />🎧 Turn on sound!
-              </p>
-
-              {/* Share Screenshot Button */}
-              <button
-                data-html2canvas-ignore
-                onClick={takeScreenshot}
-                disabled={isCapturing}
-                className={`mt-4 px-6 py-2 md:px-8 md:py-3 rounded-full font-semibold transition-all duration-300 text-sm md:text-base ${
-                  isCapturing
-                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#7CFF67] to-[#5227FF] text-white hover:scale-105 shadow-lg"
-                }`}
-              >
-                {isCapturing ? "📸 Capturing..." : "📸 Share Vibeline"}
-              </button>
-            </div>
+            <Header
+              frontCardId={frontCardId}
+              totalCards={cardsData.length}
+              isCapturing={isCapturing}
+              onTakeScreenshot={takeScreenshot}
+            />
 
             <div className="w-full flex items-center justify-center mb-12 md:mb-16">
               <Stack
@@ -250,15 +399,7 @@ export default function MoodTimeline() {
               />
             </div>
 
-            <div data-html2canvas-ignore className="mb-10">
-              <a href="https://www.buymeacoffee.com/bjh21" target="_blank">
-                <img
-                  src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png"
-                  alt="Buy Me A Coffee"
-                  className="h-10 w-auto"
-                />
-              </a>
-            </div>
+            <SupportFooter />
           </div>
         </div>
       </div>
