@@ -225,6 +225,7 @@ Step 5: The JSON example below is only a formatting template:
   - All values (Chapters, Phases, Contents, Soundtracks) must come from the provided moods data.
 
 * Make sure the number of chapters, phases, contents, and soundtracks are ALL THE SAME (e.g. 10 chapters = 10 phases = 10 contents = 10 soundtracks), phases should only be up to the latest date given in the list above.
+* DO NOT INCLUDE DATE RANGE BEYOND THE LATEST DATE IN THE PROVIDED DATA.
 
 Return ONLY valid JSON, following this format/example:
 {"Chapters": {"1": "The Echoes of Love and Longing","2": "Embracing the Upbeat","3": "Unveiling Inner Strength"},"Phases": {"1": "(March - April 2018)","2": "(April - July 2018)","3": "(August 2018 - January 2019)"},"Contents": {"1": "You begin in a space of tender reflection, where love's sweetness intertwines with a gentle ache.","2": "The tempo remains elevated, celebrating life's bright moments.","3": "A powerful undercurrent surfaces, marked by anthems of resilience and introspection."},"Soundtracks": {"1": "\\"When I Was Your Man\\" by Bruno Mars","2": "\\"Perfect Strangers\\" by Jonas Blue, JP Cooper","3": "\\"Thunder\\" by Imagine Dragons"}}`;
