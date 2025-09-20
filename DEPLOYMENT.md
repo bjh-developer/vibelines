@@ -76,6 +76,14 @@ For each variable, set the target environments:
 3. Verify the `spotify-oauth.js` file exists in `/api/` folder
 4. Check Vercel Functions tab in dashboard
 
+### If you get "500: INTERNAL_SERVER_ERROR" or "FUNCTION_INVOCATION_FAILED":
+1. Check Vercel Function logs:
+   - Go to Vercel Dashboard → Your Project → Functions tab
+   - Click on the failed function to see logs
+2. Verify all environment variables are set correctly
+3. Check that all required dependencies are installed
+4. Test the function endpoint directly first before testing the full flow
+
 ### If you get "Function Runtimes must have a valid version" error:
 1. Remove explicit runtime configuration from `vercel.json`
 2. Let Vercel auto-detect Node.js functions

@@ -20,21 +20,31 @@ const FRONTEND_URL = process.env.FRONTEND_URL || (
 // In-memory session store (use Redis in production)
 const userSessions = new Map();
 
-export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', FRONTEND_URL);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  const { action } = req.query;
-
+module.exports = async function handler(req, res) {
+  // Add error logging
+  console.log('Function invoked:', req.method, req.url, req.query);
+  
   try {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', FRONTEND_URL);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+
+    const { action } = req.query;
+    console.log('Action:', action);
+
+    // Validate required environment variables
+    if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+      console.error('Missing Spotify credentials');
+      return res.status(500).json({ error: 'Missing Spotify configuration' });
+    }
+
     switch (action) {
       case 'login':
         return await handleLogin(req, res);
@@ -45,47 +55,61 @@ export default async function handler(req, res) {
       case 'tracks':
         return await handleGetTracks(req, res);
       default:
+        console.log('Unknown action:', action);
         return res.status(404).json({ error: 'Not found' });
     }
   } catch (error) {
     console.error('Spotify OAuth error:', error);
     return res.status(500).json({ 
       error: 'Internal server error',
-      message: error.message 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
-}
+};
 
 // Initiate Spotify OAuth
 async function handleLogin(req, res) {
-  const state = crypto.randomBytes(16).toString('hex');
-  const codeVerifier = generateRandomString(128);
-  const codeChallenge = await generateCodeChallenge(codeVerifier);
-  
-  const scope = 'user-library-read user-read-private user-read-email';
-  
-  // Determine the correct redirect URI based on environment
-  const isLocal = req.headers.host?.includes('localhost') || req.headers.host?.includes('127.0.0.1');
-  const protocol = isLocal ? 'http' : 'https';
-  const redirectUri = `${protocol}://${req.headers.host}/api/spotify-oauth?action=callback`;
-  
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: SPOTIFY_CLIENT_ID,
-    scope: scope,
-    redirect_uri: redirectUri,
-    state: state,
-    code_challenge_method: 'S256',
-    code_challenge: codeChallenge
-  });
+  try {
+    console.log('Handling login request');
+    
+    const state = crypto.randomBytes(16).toString('hex');
+    const codeVerifier = generateRandomString(128);
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    
+    const scope = 'user-library-read user-read-private user-read-email';
+    
+    // Determine the correct redirect URI based on environment
+    const isLocal = req.headers.host?.includes('localhost') || req.headers.host?.includes('127.0.0.1');
+    const protocol = isLocal ? 'http' : 'https';
+    const redirectUri = `${protocol}://${req.headers.host}/api/spotify-oauth?action=callback`;
+    
+    console.log('Redirect URI:', redirectUri);
+    
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: SPOTIFY_CLIENT_ID,
+      scope: scope,
+      redirect_uri: redirectUri,
+      state: state,
+      code_challenge_method: 'S256',
+      code_challenge: codeChallenge
+    });
 
-  // Store state and code verifier (in production, use Redis with expiration)
-  userSessions.set(state, {
-    codeVerifier,
-    timestamp: Date.now()
-  });
-  
-  return res.redirect(`https://accounts.spotify.com/authorize?${params}`);
+    // Store state and code verifier (in production, use Redis with expiration)
+    userSessions.set(state, {
+      codeVerifier,
+      timestamp: Date.now()
+    });
+    
+    const authUrl = `https://accounts.spotify.com/authorize?${params}`;
+    console.log('Redirecting to:', authUrl);
+    
+    return res.redirect(authUrl);
+  } catch (error) {
+    console.error('Error in handleLogin:', error);
+    return res.status(500).json({ error: 'Login initialization failed', message: error.message });
+  }
 }
 
 // Handle Spotify OAuth callback
@@ -296,27 +320,44 @@ async function refreshUserToken(session) {
 // Helper functions
 function generateRandomString(length) {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const values = crypto.getRandomValues ? crypto.getRandomValues(new Uint8Array(length)) : 
-    Array.from({length}, () => Math.floor(Math.random() * possible.length));
-  return Array.from(values, x => possible[x % possible.length]).join('');
+  
+  try {
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const values = crypto.getRandomValues(new Uint8Array(length));
+      return Array.from(values, x => possible[x % possible.length]).join('');
+    } else {
+      // Fallback for Node.js
+      const values = Array.from({length}, () => Math.floor(Math.random() * possible.length));
+      return Array.from(values, x => possible[x % possible.length]).join('');
+    }
+  } catch (error) {
+    console.error('Error generating random string:', error);
+    // Fallback
+    return Array.from({length}, () => possible[Math.floor(Math.random() * possible.length)]).join('');
+  }
 }
 
 async function generateCodeChallenge(codeVerifier) {
-  if (typeof crypto !== 'undefined' && crypto.subtle) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(codeVerifier);
-    const digest = await crypto.subtle.digest('SHA-256', data);
-    return Buffer.from(digest).toString('base64')
-      .replace(/=/g, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
-  } else {
-    // Fallback for Node.js environment
-    const hash = crypto.createHash('sha256');
-    hash.update(codeVerifier);
-    return hash.digest('base64')
-      .replace(/=/g, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
+  try {
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(codeVerifier);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      return Buffer.from(digest).toString('base64')
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+    } else {
+      // Fallback for Node.js environment
+      const hash = crypto.createHash('sha256');
+      hash.update(codeVerifier);
+      return hash.digest('base64')
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+    }
+  } catch (error) {
+    console.error('Error generating code challenge:', error);
+    throw error;
   }
 }
