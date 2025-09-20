@@ -7,11 +7,11 @@ const SPOTIFY_CLIENT_ID = process.env.VITE_SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const NOCODE_API_KEY = process.env.NOCODE_API_KEY;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
-const FRONTEND_URL = process.env.FRONTEND_URL || (
-  process.env.VERCEL_URL 
-    ? `https://${process.env.VERCEL_URL}` 
-    : 'http://localhost:3000'
-);
+
+// Dynamic frontend URL detection for different environments
+const FRONTEND_URL = process.env.VERCEL_URL 
+  ? `https://${process.env.VERCEL_URL}` 
+  : (process.env.FRONTEND_URL || 'http://localhost:3000');
 
 // In-memory session store (use Redis in production)
 const userSessions = new Map();

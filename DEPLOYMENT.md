@@ -24,10 +24,13 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### 2. Update Spotify App Settings
 In your Spotify Developer Dashboard, add these Redirect URIs:
 
-**⚠️ IMPORTANT: Remove any existing `/callback` URIs and only use these:**
+**⚠️ IMPORTANT: Add ALL these URIs for different environments:**
 - `http://localhost:3000/api/spotify-oauth?action=callback` (for development)  
 - `https://vibelines.vercel.app/api/spotify-oauth?action=callback` (for production)
-- `https://your-preview-url.vercel.app/api/spotify-oauth?action=callback` (for preview deployments)
+- `https://vibelines-git-nocodeapi-workaround-bjh-developers-projects.vercel.app/api/spotify-oauth?action=callback` (for your current preview)
+
+**💡 TIP:** For preview deployments, you'll need to add each preview URL. Vercel preview URLs follow this pattern:
+- `https://your-repo-name-git-branch-name-your-username.vercel.app/api/spotify-oauth?action=callback`
 
 **❌ DO NOT USE these URIs (they will cause "Missing code or state parameter" errors):**
 - `https://vibelines.vercel.app/callback`
@@ -46,6 +49,8 @@ JWT_SECRET = [your_generated_jwt_secret]
 FRONTEND_URL = https://vibelines.vercel.app
 VITE_BACKEND_URL = https://vibelines.vercel.app
 ```
+
+**💡 Note:** For preview deployments, `FRONTEND_URL` is automatically detected from `VERCEL_URL`, so you don't need to set it for preview environments.
 
 ### Existing Variables (copy from your current .env):
 ```
