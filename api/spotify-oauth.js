@@ -39,6 +39,11 @@ export default async function handler(req, res) {
       console.error('Missing Spotify credentials');
       return res.status(500).json({ error: 'Missing Spotify configuration' });
     }
+    
+    if (!NOCODE_API_KEY && action === 'tracks') {
+      console.error('Missing NocodeAPI key');
+      return res.status(500).json({ error: 'Missing NocodeAPI configuration' });
+    }
 
     switch (action) {
       case 'login':
@@ -238,46 +243,70 @@ async function handleGetUser(req, res) {
 
 // Get user's liked tracks using NocodeAPI
 async function handleGetTracks(req, res) {
+  console.log('=== TRACKS REQUEST DEBUG ===');
+  console.log('Query params:', req.query);
+  console.log('Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
+  console.log('NOCODE_API_KEY configured:', NOCODE_API_KEY ? 'Yes' : 'No');
+  
   const session = await verifySession(req);
   if (!session) {
+    console.log('❌ Session verification failed');
     return res.status(401).json({ error: 'Unauthorized' });
   }
+  
+  console.log('✅ Session verified for user:', session.userId);
 
   const { limit = 50, offset = 0 } = req.query;
   
   try {
     // Check if token needs refresh
     if (Date.now() > session.expiresAt) {
+      console.log('🔄 Token expired, attempting refresh...');
       const refreshed = await refreshUserToken(session);
       if (!refreshed) {
+        console.log('❌ Token refresh failed');
         return res.status(401).json({ error: 'Session expired' });
       }
+      console.log('✅ Token refreshed successfully');
     }
 
-    // Use NocodeAPI for liked songs
-    const nocodeResponse = await fetch(`https://v1.nocodeapi.com/vibelines/spotify/${NOCODE_API_KEY}/me/tracks`, {
-      method: 'POST',
+    // Use NocodeAPI for liked songs - correct endpoint is /myLibrary with type=tracks
+    const nocodeUrl = `https://v1.nocodeapi.com/vibelines/spotify/${NOCODE_API_KEY}/myLibrary?access_token=${session.accessToken}&type=tracks&perPage=${parseInt(limit)}&page=${Math.floor(parseInt(offset) / parseInt(limit)) + 1}`;
+    
+    console.log('📡 NocodeAPI Request:');
+    console.log('URL (with token redacted):', nocodeUrl.replace(session.accessToken, '[REDACTED]'));
+    console.log('Access token available:', session.accessToken ? 'Yes' : 'No');
+    console.log('Limit:', parseInt(limit), 'Offset:', parseInt(offset));
+    console.log('Calculated page:', Math.floor(parseInt(offset) / parseInt(limit)) + 1);
+    
+    const nocodeResponse = await fetch(nocodeUrl, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        access_token: session.accessToken,
-        limit: parseInt(limit),
-        offset: parseInt(offset)
-      })
+      }
     });
+    
+    console.log('📨 NocodeAPI Response status:', nocodeResponse.status);
     
     if (!nocodeResponse.ok) {
       const errorText = await nocodeResponse.text();
-      console.error('NocodeAPI request failed:', errorText);
-      return res.status(500).json({ error: 'Failed to fetch liked songs' });
+      console.error('❌ NocodeAPI request failed:', errorText);
+      return res.status(500).json({ 
+        error: 'Failed to fetch liked songs',
+        details: errorText,
+        status: nocodeResponse.status
+      });
     }
     
     const data = await nocodeResponse.json();
+    console.log('✅ NocodeAPI success, tracks count:', data.items?.length || 0);
     return res.json(data);
   } catch (error) {
-    console.error('Error fetching liked songs:', error);
-    return res.status(500).json({ error: 'Failed to fetch liked songs' });
+    console.error('❌ Error fetching liked songs:', error);
+    return res.status(500).json({ 
+      error: 'Failed to fetch liked songs',
+      message: error.message
+    });
   }
 }
 

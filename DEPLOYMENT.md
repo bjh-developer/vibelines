@@ -77,7 +77,7 @@ For each variable, set the target environments:
 
 1. Deploy to Vercel
 2. **First, test the API endpoint directly:**
-   - Go to `https://vibelines.vercel.app/api/spotify-oauth?action=login`
+   - Go to `https://vibelines-git-nocodeapi-workaround-bjh-developers-projects.vercel.app/api/spotify-oauth?action=login`
    - Should redirect to Spotify login (not show 404)
 3. Test the full OAuth flow:
    - Click "Connect Spotify" in your app
