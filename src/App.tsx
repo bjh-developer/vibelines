@@ -334,6 +334,29 @@ const InfoDrawer = () => {
 };
 
 /**
+ * Component for the info announcement
+ */
+const InfoAnnouncement = () => {
+  const { triggerHaptic } = useHaptic();
+
+  return (
+    <div
+      className="mt-6 md:mt-8 transition-transform duration-50 active:scale-95 cursor-pointer hover:scale-105"
+      onClick={triggerHaptic}
+    >
+      <Announcement className="bg-rose-100 text-rose-700" themed>
+        <AnnouncementTag>⚠️</AnnouncementTag>
+        <AnnouncementTitle>
+          Due to Spotify's API restrictions, only approved users can use this.
+          Please contact me for access.
+          <ArrowUpRightIcon className="shrink-0 opacity-70" size={16} />
+        </AnnouncementTitle>
+      </Announcement>
+    </div>
+  );
+};
+
+/**
  * Component for footer credits
  */
 const Footer = () => (
@@ -453,6 +476,9 @@ export default function App() {
 
             {/* Info Drawer */}
             <InfoDrawer />
+
+            {/* Info Announcement */}
+            <InfoAnnouncement />
           </div>
 
           {/* Footer */}
