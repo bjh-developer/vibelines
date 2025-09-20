@@ -93,11 +93,11 @@ export default function About() {
       </ContentParagraph>
 
       <ContentParagraph>
-        Using{" "}
+        Using a{" "}
         <ExternalLink href={EXTERNAL_LINKS.musicModel}>
           state-of-the-art Music Emotion Recognition model
         </ExternalLink>{" "}
-        and{" "}
+        and a{" "}
         <ExternalLink href={EXTERNAL_LINKS.llmModel}>
           Large Language Model
         </ExternalLink>
@@ -108,8 +108,8 @@ export default function About() {
 
       <ContentParagraph>
         Discover patterns in your listening habits and see how your musical
-        emotions evolve over time. Reminiscence your past through the soundtrack
-        of your life.
+        emotions evolve. Reminiscence about your past through the soundtrack of
+        your life.
       </ContentParagraph>
 
       <ContentParagraph>
