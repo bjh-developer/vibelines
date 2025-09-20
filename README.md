@@ -51,8 +51,6 @@ Discover patterns in your listening habits and see how your musical emotions evo
 
 ### Built With
 
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
 * [![React][React.js]][React-url]
 * [![TypeScript][Typescript]][Typescript-url]
 * [![TypeScript][TypeScript]][TypeScript-url]
