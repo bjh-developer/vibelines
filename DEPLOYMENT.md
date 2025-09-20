@@ -59,11 +59,22 @@ For each variable, set the target environments:
 ## 🔍 Testing After Deployment
 
 1. Deploy to Vercel
-2. Test the Spotify OAuth flow:
-   - Click "Connect Spotify"
+2. **First, test the API endpoint directly:**
+   - Go to `https://vibelines.vercel.app/api/spotify-oauth?action=login`
+   - Should redirect to Spotify login (not show 404)
+3. Test the full OAuth flow:
+   - Click "Connect Spotify" in your app
    - Should redirect to Spotify login
    - After login, should redirect back to your app
    - Should see user's liked songs loading
+
+## 🐛 Troubleshooting
+
+### If you see "No routes matched location /api/spotify-oauth":
+1. Check that `vercel.json` has the correct rewrite rules
+2. Ensure API routes are excluded from SPA rewrites
+3. Verify the `spotify-oauth.js` file exists in `/api/` folder
+4. Check Vercel Functions tab in dashboard
 
 ## 🚨 Security Notes
 
