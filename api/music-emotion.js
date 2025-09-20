@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     });
     
     // Your VM's FastAPI URL
-    const VM_API_URL = 'http://104.198.230.255';
+    const VM_API_URL = 'https://ktnf72fqnabpy2-8000.proxy.runpod.net/';
     
     let targetUrl;
     let requestOptions = {

@@ -1,5 +1,7 @@
 // Utility for calling the music emotion analysis API through Vercel proxy
 
+import { Target } from "lucide-react";
+
 interface MoodPrediction {
   predicted_moods: string[] | null;
 }
@@ -35,10 +37,31 @@ export const analyzeSongMoods = async (songTitle: string, artistName: string): P
   try {
     console.log(`🎭 Analyzing moods for: "${songTitle}" by ${artistName}`);
     
-    const response = await fetch(`/api/music-emotion?endpoint=analyse-predict&song_title=${encodeURIComponent(songTitle)}&artist_name=${encodeURIComponent(artistName)}`, {
-      method: 'GET',
+    // const response = await fetch(`/api/music-emotion?endpoint=analyse-predict&song_title=${encodeURIComponent(songTitle)}&artist_name=${encodeURIComponent(artistName)}`, {
+    //   method: 'GET',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   }
+    // });
+
+    // Replace forward slashes with a safe placeholder before encoding
+    // This prevents routing issues in FastAPI
+    const safeSongTitle = songTitle.replace(/\//g, '___SLASH___');
+    const safeArtistName = artistName.replace(/\//g, '___SLASH___');
+
+    // Your backend expects the exact format: /analyse&predict/{title}/{artist}
+    const encodedTitle = encodeURIComponent(safeSongTitle);
+    const encodedArtist = encodeURIComponent(safeArtistName);
+    const API_URL = 'https://ktnf72fqnabpy2-8000.proxy.runpod.net';
+    const apiKey = process.env.M2E_API_KEY;
+    let targetUrl;
+    targetUrl = `${API_URL}/analyse&predict/${encodedTitle}/${encodedArtist}`;
+
+    const response = await fetch(targetUrl, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'api-key': apiKey || ''
       }
     });
 
