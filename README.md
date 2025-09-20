@@ -27,6 +27,7 @@
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
+    <li><a href="#documentation">Documentation</a></li>
   </ol>
 </details>
 
@@ -71,6 +72,22 @@ Discover patterns in your listening habits and see how your musical emotions evo
 * [![pydub][pydub]][pydub-url]
 * [Google Gemini Flash](https://deepmind.google/models/gemini/flash-lite/)
 * [Music2Emo](https://huggingface.co/amaai-lab/music2emo)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- DOCUMENTATION -->
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[📚 Technical Documentation](TECHNICAL_DOCUMENTATION.md)** - Complete technical overview and architecture
+- **[🧩 Component Documentation](docs/COMPONENT_DOCUMENTATION.md)** - React component library and usage examples
+
+### Quick Links
+- [Architecture Overview](TECHNICAL_DOCUMENTATION.md#architecture)
+- [Frontend Components](docs/COMPONENT_DOCUMENTATION.md#core-application-components)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
