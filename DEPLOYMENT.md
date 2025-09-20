@@ -50,7 +50,13 @@ FRONTEND_URL = https://vibelines.vercel.app
 VITE_BACKEND_URL = https://vibelines.vercel.app
 ```
 
-**💡 Note:** For preview deployments, `FRONTEND_URL` is automatically detected from `VERCEL_URL`, so you don't need to set it for preview environments.
+### Required for Preview Deployment:
+```
+FRONTEND_URL = https://vibelines-git-nocodeapi-workaround-bjh-developers-projects.vercel.app
+VITE_BACKEND_URL = https://vibelines-git-nocodeapi-workaround-bjh-developers-projects.vercel.app
+```
+
+**💡 Note:** The code will default to your preview URL if no `FRONTEND_URL` is set.
 
 ### Existing Variables (copy from your current .env):
 ```
