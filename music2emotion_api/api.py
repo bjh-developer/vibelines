@@ -215,18 +215,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Allowed origins for CORS
-ALLOWED_ORIGINS = [
-    "https://vibelines.vercel.app",
-    "https://vibelines.vercel.app/callback",
-    "https://vibelines.vercel.app/loading",
-    "http://127.0.0.1:3000"  # For local development
-]
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
