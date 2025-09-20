@@ -1,11 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import Aurora from "./components/AuroraBG";
 import { startViewTransition } from "./utils/viewTransitions";
+import { useHaptic } from "use-haptic";
 
 export default function About() {
+  const { triggerHaptic } = useHaptic();
   const navigate = useNavigate();
 
   const handleBackToHome = () => {
+    triggerHaptic();
     startViewTransition(() => {
       navigate("/", { viewTransition: true });
     });

@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Thread pool for CPU-intensive operations
-executor = ThreadPoolExecutor(max_workers=2)
+executor = ThreadPoolExecutor()
 
 # Global variables
 music2emo_model = None
