@@ -347,7 +347,10 @@ const InfoAnnouncement = () => {
       <Announcement className="bg-rose-100 text-rose-700" themed>
         <AnnouncementTag>⚠️</AnnouncementTag>
         <AnnouncementTitle>
-          Due to Spotify's API restrictions, only approved users can use this.
+          Due to Spotify's API restrictions,
+          <br />
+          only approved users can use this.
+          <br />
           Please contact me for access.
           <ArrowUpRightIcon className="shrink-0 opacity-70" size={16} />
         </AnnouncementTitle>
