@@ -15,6 +15,10 @@
     <a href="https://vibelines.vercel.app"><strong>Explore the website »</strong></a>
 </div>
 
+>[!NOTE]
+>Due to the Spotify Web API's development mode restrictions, I am unable to provide public access to the functionality on my website that involves Spotify. Don't hesitate to get in touch with me if you wish to use the website :)
+
+
 
 
 <!-- TABLE OF CONTENTS -->
