@@ -15,7 +15,7 @@
     <a href="https://vibelines.vercel.app"><strong>Explore the website »</strong></a>
 </div>
 
->[!NOTE]
+>[!IMPORTANT]
 >Due to the Spotify Web API's development mode restrictions, I am unable to provide public access to the functionality on my website that involves Spotify. Don't hesitate to get in touch with me if you wish to use the website :)
 
 
@@ -49,6 +49,13 @@ Thus, Vibelines was born.
 Using a state-of-the-art Music Emotion Recognition model and a Large Language Model, Vibelines analyses your liked songs to understand the emotional landscape of your musical taste, presenting it as an interactive visual experience.
 
 Discover patterns in your listening habits and see how your musical emotions evolve. Reminiscence about your past through the soundtrack of your life.
+
+<video width="1280" height="720" controls>
+  <source src="Vibelines_demo.mov" type="video/mp4">
+</video>
+
+>[!NOTE]
+>When your vibeline cards are displayed, the audio of the song on the card will be played in the background (not captured in the demo video above)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
