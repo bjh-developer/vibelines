@@ -50,9 +50,7 @@ Using a state-of-the-art Music Emotion Recognition model and a Large Language Mo
 
 Discover patterns in your listening habits and see how your musical emotions evolve. Reminiscence about your past through the soundtrack of your life.
 
-<video width="1280" height="720" controls>
-  <source src="Vibelines_demo.mov" type="video/mp4">
-</video>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/5Ed8_mP0MP8?si=5L7S1qpmtjmwXRwE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 >[!NOTE]
 >When your vibeline cards are displayed, the audio of the song on the card will be played in the background (not captured in the demo video above)
