@@ -50,7 +50,7 @@ export const analyzeSongMoods = async (songTitle: string, artistName: string): P
     // Your backend expects the exact format: /analyse&predict/{title}/{artist}
     const encodedTitle = encodeURIComponent(safeSongTitle);
     const encodedArtist = encodeURIComponent(safeArtistName);
-    const API_URL = 'https://ktnf72fqnabpy2-8000.proxy.runpod.net';
+    const API_URL = 'https://mzl4cxn4scxipz-8000.proxy.runpod.net';
     const apiKey = import.meta.env.VITE_M2E_API_KEY;
     let targetUrl;
     targetUrl = `${API_URL}/analyse&predict/${encodedTitle}/${encodedArtist}`;
