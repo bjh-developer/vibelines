@@ -74,7 +74,6 @@ const EXTERNAL_LINKS = {
   deezerApi: "https://developers.deezer.com/api",
   music2emo: "https://huggingface.co/amaai-lab/music2emo",
   gemini: "https://deepmind.google/models/gemini/flash-lite/",
-  buyMeCoffee: "https://www.buymeacoffee.com/bjh21",
 } as const;
 
 /**
@@ -302,24 +301,6 @@ const InfoDrawer = () => {
               computer that can only handle limited requests at a time. If I
               take a bit longer or run into an error, please bear with me as I
               work to serve you the best I can! Your patience means a lot. 🙏
-              <br />
-              <br />
-              If you are feeling generous, consider supporting me through "buy
-              me a coffee" so I can keep improving!
-              <br />
-              <br />
-              <a
-                href={EXTERNAL_LINKS.buyMeCoffee}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block"
-              >
-                <img
-                  src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png"
-                  alt="Buy Me A Coffee"
-                  className="h-10 w-auto"
-                />
-              </a>
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter>
