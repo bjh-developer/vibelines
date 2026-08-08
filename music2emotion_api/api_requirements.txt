@@ -19,7 +19,7 @@ llvmlite==0.43.0
 nnAudio==0.3.1
 omegaconf==2.3.0
 pandas==2.2.3
-Pillow==11.1.0
+Pillow==12.1.1
 pretty_midi==0.2.10
 pytorch_lightning==2.4.0
 PyYAML==6.0.1
